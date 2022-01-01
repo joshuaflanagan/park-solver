@@ -1,4 +1,4 @@
-import { Board } from "../src/index";
+import { Board } from "../src/board";
 
 describe("Building a Board", () => {
   const validRegionSpec = [
