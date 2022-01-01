@@ -8,6 +8,7 @@
   "license": "MIT",
   "scripts": {
     "compile": "tsc",
+    "start": "tsc && node .",
     "test": "jest"
   },
   "devDependencies": {
