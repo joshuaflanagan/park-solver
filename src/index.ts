@@ -29,3 +29,5 @@ const solver = new Solver(board);
 const nextMove = solver.nextMove(state);
 console.log("nextMove:", nextMove);
 
+
+console.log("neighbors", board.neighbors(board.cells[6]))

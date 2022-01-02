@@ -183,3 +183,42 @@ describe("Checking for free cells in a region", () => {
     ]);
   });
 });
+
+describe("Identifying neighbors of a cell", () => {
+  const regionSpec = [
+    ["a", "a", "a", "a", "a"],
+    ["b", "a", "a", "a", "a"],
+    ["b", "c", "d", "e", "e"],
+    ["c", "c", "c", "e", "e"],
+    ["c", "c", "c", "e", "e"],
+  ];
+
+  test("An internal cell has 8 neighbors", () => {
+    const board = new Board(regionSpec);
+    const cell = board.cells[6];
+
+    const neighbors = board.neighbors(cell);
+
+    expect(neighbors.length).toEqual(8);
+  });
+
+  test("A corner cell has 3 neighbors", () => {
+    const board = new Board(regionSpec);
+
+    expect( board.neighbors(board.cells[0]).length ).toEqual(3);
+    expect( board.neighbors(board.cells[4]).length ).toEqual(3);
+    expect( board.neighbors(board.cells[20]).length ).toEqual(3);
+    expect( board.neighbors(board.cells[24]).length ).toEqual(3);
+  });
+
+  test("A non-corner edge cell has 5 neighbors", () => {
+    const board = new Board(regionSpec);
+
+    expect( board.neighbors(board.cells[1]).length ).toEqual(5);
+    expect( board.neighbors(board.cells[3]).length ).toEqual(5);
+    expect( board.neighbors(board.cells[5]).length ).toEqual(5);
+    expect( board.neighbors(board.cells[9]).length ).toEqual(5);
+    expect( board.neighbors(board.cells[10]).length ).toEqual(5);
+    expect( board.neighbors(board.cells[21]).length ).toEqual(5);
+  });
+});

@@ -1,13 +1,37 @@
 import { Board, Container, Cell } from "./board";
 import { CellState, State } from "./state";
 
-type MoveReason = "invalid-state" | "blocks-all-region"| "blocks-all-col"| "blocks-all-row"| "only-option-region"| "only-option-col"| "only-option-row";
+// instead of container-full, consider column-full, row-full, region-full - if we have the info
+// also need - surrounds-full-cell
+type MoveReason = "invalid-state" | "container-full" |
+  "blocks-all-region"| "blocks-all-col"| "blocks-all-row"|
+  "only-option-region"| "only-option-col"| "only-option-row";
 
-interface Move {
+
+/*
+ * When you set a cell to Full, it is always because it is only option in a Container
+ * The container is obvious, if the region/col/row are different reasons.
+ *
+ * When you set a cell to blocked, it can be because:
+ * - it surrounds a full cell - because: Cell
+ * - it is in the same Container as a full cell - because: Container (or Cell?)
+ * - it blocks all of an unfull Container's options - because: Container
+ *
+ * What if the because is an array of cells?
+ * - it surrounds a full cell - because: [the full cell]
+ * - it is in the same Container as a full cell - because: [the full cell]
+ * - it blocks all of an unfull Container's options - because: [all container's cells, or just the empty ones]
+ */
+
+export interface Change {
   cell: Cell;
   changeTo: CellState;
+  because: Cell[];
+}
+
+export interface Move {
   reason: MoveReason;
-  target: Container;
+  changes: Change[];
 }
 
 export class Solver {
@@ -17,26 +41,77 @@ export class Solver {
     this.board = board;
   }
 
-  //TODO: probably want this to return an array of moves, to handle "inline". Or, a Move has many Changes
+  _changesForFull(cell: Cell, state: State): Change[]{
+    const candidates: Change[] = [{
+      cell: cell,
+      changeTo: "full",
+      because: [cell]
+    },
+      // surrounding
+      ...this.board.neighbors(cell).map(n => {
+        return {
+          cell: n,
+          changeTo: "blocked" as CellState,
+          because: [cell]
+        }
+      }),
+      // same row
+      ...cell.row.cells.filter(n => !n.state(state)).map(n => {
+        return {
+          cell: n,
+          changeTo: "blocked" as CellState,
+          because: [cell]
+        }
+      }),
+      // same col
+      ...cell.col.cells.filter(n => !n.state(state)).map(n => {
+        return {
+          cell: n,
+          changeTo: "blocked" as CellState,
+          because: [cell]
+        }
+      }),
+      // same region
+      ...cell.region.cells.filter(n => !n.state(state)).map(n => {
+        return {
+          cell: n,
+          changeTo: "blocked" as CellState,
+          because: [cell]
+        }
+      }),
+      // TODO: need to dedup across row,col,region
+    ];
+    const deduped: Change[] = [];
+    const seen = new Set();
+
+    candidates.forEach(candidate => {
+      if (!seen.has(candidate.cell.index)){
+        seen.add(candidate.cell.index);
+        deduped.push(candidate);
+      }
+    })
+    return deduped
+  }
+
+
+  //TODO: probably want a Move to have an array of cells, to handle "inline".
   nextMove(state: State): Move {
     for(const regionId in this.board.regions){
       const region = this.board.regions[regionId];
       const freeCells = region.freeCells(state);
       if (freeCells.length === 1){
         return {
-          cell: freeCells[0],
-          changeTo: "full",
           reason: "only-option-region",
-          target: region
+          changes: this._changesForFull(freeCells[0], state)
         };
       }
     }
-    // invalid state - return a sentinel object
+    // invalid state - return a sentinel object?
+    // there can be 2 no-op "moves" - board complete, or board invalid
+    // can model them as a Move with an empty cells array
     return {
-      cell: this.board.cells[0],
-      changeTo: undefined,
       reason: "invalid-state",
-      target: this.board.regions[0]
+      changes: []
     };
   }
 }

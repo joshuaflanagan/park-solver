@@ -137,6 +137,53 @@ export class Board {
     }
   }
 
+  neighbors(cell: Cell): Cell[] {
+    const result = [];
+    const index = cell.index;
+    const row = index % this.size;
+    const col = Math.floor(index / this.size);
+    const boundary = this.size - 1;
+    // Return neighbors in clockwise order
+
+    if (row > 0){
+      if (col > 0){
+        // NW
+        result.push(this.cells[ (row - 1) * this.size + col - 1 ])
+      }
+
+      // N
+      result.push(this.cells[ (row - 1) * this.size + col ])
+
+      if (col < boundary) {
+        // NE
+        result.push(this.cells[ (row - 1) * this.size + col + 1 ])
+      }
+    }
+    if (col < boundary) {
+      // east
+      result.push(this.cells[ row * this.size + col + 1 ])
+    }
+    if (row < boundary){
+      if (col !== boundary) {
+        // SE
+        result.push(this.cells[ (row + 1) * this.size + col + 1 ])
+      }
+
+      // S
+      result.push(this.cells[ (row + 1) * this.size + col ])
+
+      if (col > 0){
+        // SW
+        result.push(this.cells[ (row + 1) * this.size + col - 1 ])
+      }
+    }
+    if (col > 0){
+      // west
+      result.push(this.cells[ row * this.size + col - 1 ])
+    }
+    return result;
+  }
+
   createState(){
     return new Array(this.cells.length);
   }
