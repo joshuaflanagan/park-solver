@@ -74,3 +74,15 @@ describe("Determine the next move", () => {
     return change;
   }
 });
+
+describe("Potential advanced board", () => {
+  // This does not appear solvable by the identified strategies
+
+  const regionSpec = [
+    ["a", "a", "a", "a", "b"],
+    ["a", "b", "b", "b", "b"],
+    ["b", "b", "c", "c", "d"],
+    ["e", "b", "c", "c", "d"],
+    ["e", "e", "e", "c", "d"],
+  ];
+});
