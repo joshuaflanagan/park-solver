@@ -41,6 +41,16 @@ describe("Building a Board", () => {
     expect(Object.keys(board.regions).length).toEqual(board.size);
   });
 
+  test("Each region is associated with a collection of cells", () => {
+    const board = new Board(validRegionSpec);
+    const cell1 = board.cells[3];
+    const cell2 = board.cells[0];
+    expect(cell1.region).not.toEqual(cell2.region); // make sure they are in separate regions
+    const region = cell1.region;
+    expect(region.cells).toContain(cell1);
+    expect(region.cells).not.toContain(cell2);
+  });
+
   test("Each cell is associated with a Row", () => {
     const board = new Board(validRegionSpec);
     expect(board.cells[0].row.id).toEqual("0");
@@ -110,5 +120,57 @@ describe("Building a Board", () => {
     expect( () => {
       new Board(invalidRegionSpec);
     }).toThrow("row");
+  });
+});
+
+describe("Building a State", () => {
+  const validRegionSpec = [
+    ["a", "a", "a", "b", "b"],
+    ["a", "c", "c", "c", "b"],
+    ["d", "c", "c", "e", "b"],
+    ["d", "d", "c", "e", "b"],
+    ["d", "c", "c", "e", "e"],
+  ];
+
+  test("Can create a new state object with a value per cell in the board", ()=> {
+    const board = new Board(validRegionSpec);
+    const state = board.createState();
+    expect(state.length).toEqual(board.cells.length);
+  });
+});
+
+describe("Checking for free cells in a region", () => {
+  const regionSpec = [
+    ["a", "a", "a", "a", "a"],
+    ["b", "a", "a", "a", "a"],
+    ["b", "c", "d", "e", "e"],
+    ["c", "c", "c", "e", "e"],
+    ["c", "c", "c", "e", "e"],
+  ];
+
+  test("Returns an empty array when all cells are blocked or full", () => {
+    const board = new Board(regionSpec);
+    const state = board.createState();
+    state.fill("blocked");
+    state[0] = "full";
+
+    const freeCells = board.regions["a"].freeCells(state);
+    expect(freeCells).toEqual([]);
+  });
+
+  test("Returns an array of cells in the region that are not blocked or full", () => {
+    const board = new Board(regionSpec);
+    const state = board.createState();
+    state.fill("blocked");
+    state[1] = undefined;
+    state[3] = undefined;
+    state[6] = undefined;
+
+    const freeCells = board.regions["a"].freeCells(state);
+    expect(freeCells).toEqual([
+      board.cells[1],
+      board.cells[3],
+      board.cells[6],
+    ]);
   });
 });

@@ -45,36 +45,60 @@
  *
 */
 
+import { State } from "./state";
+const util = require('util');
+
 type RegionSpec = Array<string[]>
 
-class Row {
+export class Row {
   id: string;
   constructor(id: string){
     this.id = id.toString();
   }
 }
-class Col {
+export class Col {
   id: string;
   constructor(id: string){
     this.id = id;
   }
 }
-class Region {
+export class Region {
   id: string;
+  cells: Cell[];
 
   constructor(id: string){
     this.id = id;
+    this.cells = [];
+  }
+
+  freeCells(state: State): Cell[]{
+    return this.cells.filter(cell => !cell.state(state));
+  }
+
+  addCell(cell: Cell){
+    this.cells.push(cell);
   }
 }
 
-class Cell {
+export class Cell {
+  index: number;
   row: Row;
   col: Col;
   region: Region;
-  constructor(region: Region, row: Row, col: Col){
+  constructor(index: number, region: Region, row: Row, col: Col){
+    this.index = index;
     this.region = region;
+    this.region.addCell(this);
     this.row = row;
     this.col = col;
+  }
+
+  state(currentState: State){
+    return currentState[this.index];
+  }
+
+  [util.inspect.custom](){
+    return `${this.col.id},${this.row.id},${this.region.id}`;
   }
 }
 
@@ -111,11 +135,15 @@ export class Board {
           region = new Region(regionId);
           this.regions[regionId] = region;
         }
-        this.cells.push(new Cell(region, row, col));
+        this.cells.push(new Cell(this.cells.length, region, row, col));
       }
     }
     if (Object.keys(this.regions).length !== this.size){
       throw new Error(`Invalid number of regions. Found ${Object.keys(this.regions)}, expected ${this.size}`);
     }
+  }
+
+  createState(){
+    return new Array(this.cells.length);
   }
 }
