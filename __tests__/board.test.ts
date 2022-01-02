@@ -29,6 +29,15 @@ describe("Building a Board", () => {
     expect(board.cells.length).toEqual(5 * 5);
   });
 
+  test("Each cell has a label that indicates column, row, and region", () => {
+    const board = new Board(validRegionSpec);
+    expect(board.cells[0].label).toEqual("0,0,a");
+    expect(board.cells[1].label).toEqual("1,0,a");
+    expect(board.cells[4].label).toEqual("4,0,b");
+    expect(board.cells[5].label).toEqual("0,1,a");
+    expect(board.cells[24].label).toEqual("4,4,e");
+  });
+
   test("Each cell is associated with a region", () => {
     const board = new Board(validRegionSpec);
     expect(board.cells[0].region.id).toEqual("a");

@@ -75,6 +75,7 @@ export class Cell {
   row: Container;
   col: Container;
   region: Container;
+  label: string;
   constructor(index: number, region: Container, row: Container, col: Container){
     this.index = index;
     this.region = region;
@@ -83,6 +84,7 @@ export class Cell {
     this.row.addCell(this);
     this.col = col;
     this.col.addCell(this);
+    this.label = `${this.col.id},${this.row.id},${this.region.id}`;
   }
 
   state(currentState: State){
@@ -90,7 +92,7 @@ export class Cell {
   }
 
   [util.inspect.custom](){
-    return `${this.col.id},${this.row.id},${this.region.id}`;
+    return this.label;
   }
 }
 
