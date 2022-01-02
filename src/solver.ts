@@ -1,4 +1,4 @@
-import { Board, Region, Row, Col, Cell } from "./board";
+import { Board, Container, Cell } from "./board";
 import { CellState, State } from "./state";
 
 type MoveReason = "invalid-state" | "blocks-all-region"| "blocks-all-col"| "blocks-all-row"| "only-option-region"| "only-option-col"| "only-option-row";
@@ -7,7 +7,7 @@ interface Move {
   cell: Cell;
   changeTo: CellState;
   reason: MoveReason;
-  target: Region | Row | Col;
+  target: Container;
 }
 
 export class Solver {

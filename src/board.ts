@@ -50,19 +50,7 @@ const util = require('util');
 
 type RegionSpec = Array<string[]>
 
-export class Row {
-  id: string;
-  constructor(id: string){
-    this.id = id.toString();
-  }
-}
-export class Col {
-  id: string;
-  constructor(id: string){
-    this.id = id;
-  }
-}
-export class Region {
+export class Container {
   id: string;
   cells: Cell[];
 
@@ -80,17 +68,21 @@ export class Region {
   }
 }
 
+//TODO: maybe a cell doesn't need references to row/col/region
+// could replace the properties with methods.
 export class Cell {
   index: number;
-  row: Row;
-  col: Col;
-  region: Region;
-  constructor(index: number, region: Region, row: Row, col: Col){
+  row: Container;
+  col: Container;
+  region: Container;
+  constructor(index: number, region: Container, row: Container, col: Container){
     this.index = index;
     this.region = region;
     this.region.addCell(this);
     this.row = row;
+    this.row.addCell(this);
     this.col = col;
+    this.col.addCell(this);
   }
 
   state(currentState: State){
@@ -106,9 +98,9 @@ export class Board {
   size: number;
   fillCount: number;
   cells: Cell[];
-  rows: Row[];
-  cols: Col[];
-  regions: { [key: string]: Region };
+  rows: Container[];
+  cols: Container[];
+  regions: { [key: string]: Container };
 
   constructor(regionSpec: RegionSpec, fillCount: number=1){
     this.size = regionSpec.length;
@@ -118,8 +110,8 @@ export class Board {
     this.cols = [];
     this.regions = {};
     for(let i=0; i<this.size; i++){
-      this.rows.push(new Row(i.toString()));
-      this.cols.push(new Col(i.toString()));
+      this.rows.push(new Container(i.toString()));
+      this.cols.push(new Container(i.toString()));
     }
     for(let r=0; r<this.size; r++){
       const row = this.rows[r];
@@ -132,7 +124,7 @@ export class Board {
         const regionId = rowSpec[c];
         let region = this.regions[regionId];
         if (!region){
-          region = new Region(regionId);
+          region = new Container(regionId);
           this.regions[regionId] = region;
         }
         this.cells.push(new Cell(this.cells.length, region, row, col));
