@@ -3,7 +3,7 @@ import { CellState, State } from "./state";
 
 // instead of container-full, consider column-full, row-full, region-full - if we have the info
 // also need - surrounds-full-cell
-type MoveReason = "invalid-state" | "container-full" |
+type MoveReason = "input" | "invalid-state" | "container-full" |
   "blocks-all-region"| "blocks-all-col"| "blocks-all-row"|
   "only-option-region"| "only-option-col"| "only-option-row";
 
@@ -24,9 +24,9 @@ type MoveReason = "invalid-state" | "container-full" |
  */
 
 export interface Change {
-  cell: Cell;
+  cell: number;
   changeTo: CellState;
-  because: Cell[];
+  because: number[];
 }
 
 export interface Move {
@@ -43,40 +43,40 @@ export class Solver {
 
   _changesForFull(cell: Cell, state: State): Change[]{
     const candidates: Change[] = [{
-      cell: cell,
+      cell: cell.index,
       changeTo: "full",
-      because: [cell]
+      because: [cell.index]
     },
       // surrounding
       ...this.board.neighbors(cell).map(n => {
         return {
-          cell: n,
+          cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell]
+          because: [cell.index]
         }
       }),
       // same row
       ...cell.row().cells.filter(n => !n.state(state)).map(n => {
         return {
-          cell: n,
+          cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell]
+          because: [cell.index]
         }
       }),
       // same col
       ...cell.col().cells.filter(n => !n.state(state)).map(n => {
         return {
-          cell: n,
+          cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell]
+          because: [cell.index]
         }
       }),
       // same region
       ...cell.region().cells.filter(n => !n.state(state)).map(n => {
         return {
-          cell: n,
+          cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell]
+          because: [cell.index]
         }
       }),
       // TODO: need to dedup across row,col,region
@@ -85,8 +85,8 @@ export class Solver {
     const seen = new Set();
 
     candidates.forEach(candidate => {
-      if (!seen.has(candidate.cell.index)){
-        seen.add(candidate.cell.index);
+      if (!seen.has(candidate.cell)){
+        seen.add(candidate.cell);
         deduped.push(candidate);
       }
     })
