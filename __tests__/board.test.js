@@ -192,7 +192,7 @@ describe("Checking for free cells in a region", () => {
     state.fill("blocked");
     state[0] = "full";
 
-    const freeCells = board.regions["a"].freeCells(state);
+    const freeCells = board.regionsByLabel["a"].freeCells(state);
     expect(freeCells).toEqual([]);
   });
 
@@ -204,7 +204,7 @@ describe("Checking for free cells in a region", () => {
     state[3] = undefined;
     state[6] = undefined;
 
-    const freeCells = board.regions["a"].freeCells(state);
+    const freeCells = board.regionsByLabel["a"].freeCells(state);
     expect(freeCells).toEqual([
       board.cells[1],
       board.cells[3],

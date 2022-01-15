@@ -96,8 +96,7 @@ export class Solver {
 
   //TODO: probably want a Move to have an array of cells, to handle "inline".
   nextMove(state: State): Move {
-    for(const regionId in this.board.regions){
-      const region = this.board.regions[regionId];
+    for(const region of this.board.regions){
       const freeCells = region.freeCells(state);
       if (freeCells.length === 1){
         return {

@@ -106,7 +106,8 @@ export class Board {
   cells: Cell[];
   rows: Container[];
   cols: Container[];
-  regions: { [key: string]: Container };
+  regions: Container[];
+  regionsByLabel: { [key: string]: Container };
   regionsByCellIndex: { [key: number]: Container };
 
   constructor(regionSpec: RegionSpec, fillCount: number=1){
@@ -115,7 +116,8 @@ export class Board {
     this.cells = [];
     this.rows = [];
     this.cols = [];
-    this.regions = {};
+    this.regions = [];
+    this.regionsByLabel = {};
     this.regionsByCellIndex = {};
 
     for(let i=0; i<this.size; i++){
@@ -130,11 +132,12 @@ export class Board {
       }
       for(let c=0; c<this.size; c++){
         const col = this.cols[c];
-        const regionId = rowSpec[c];
-        let region = this.regions[regionId];
+        const regionLabel = rowSpec[c];
+        let region = this.regionsByLabel[regionLabel];
         if (!region){
-          region = new Container(regionId);
-          this.regions[regionId] = region;
+          region = new Container(regionLabel);
+          this.regions.push(region);
+          this.regionsByLabel[regionLabel] = region;
         }
         const label = `${col.id},${row.id},${region.id}`;
         const cell = new Cell(this, this.cells.length, label);
@@ -145,8 +148,8 @@ export class Board {
         col.addCell(cell);
       }
     }
-    if (Object.keys(this.regions).length !== this.size){
-      throw new Error(`Invalid number of regions. Found ${Object.keys(this.regions)}, expected ${this.size}`);
+    if (Object.keys(this.regionsByLabel).length !== this.size){
+      throw new Error(`Invalid number of regions. Found ${Object.keys(this.regionsByLabel)}, expected ${this.size}`);
     }
   }
 
