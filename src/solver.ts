@@ -56,7 +56,7 @@ export class Solver {
         }
       }),
       // same row
-      ...cell.row.cells.filter(n => !n.state(state)).map(n => {
+      ...cell.row().cells.filter(n => !n.state(state)).map(n => {
         return {
           cell: n,
           changeTo: "blocked" as CellState,
@@ -64,7 +64,7 @@ export class Solver {
         }
       }),
       // same col
-      ...cell.col.cells.filter(n => !n.state(state)).map(n => {
+      ...cell.col().cells.filter(n => !n.state(state)).map(n => {
         return {
           cell: n,
           changeTo: "blocked" as CellState,
@@ -72,7 +72,7 @@ export class Solver {
         }
       }),
       // same region
-      ...cell.region.cells.filter(n => !n.state(state)).map(n => {
+      ...cell.region().cells.filter(n => !n.state(state)).map(n => {
         return {
           cell: n,
           changeTo: "blocked" as CellState,

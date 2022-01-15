@@ -68,23 +68,27 @@ export class Container {
   }
 }
 
-//TODO: maybe a cell doesn't need references to row/col/region
-// could replace the properties with methods.
 export class Cell {
+  board: Board;
   index: number;
-  row: Container;
-  col: Container;
-  region: Container;
   label: string;
-  constructor(index: number, region: Container, row: Container, col: Container){
+
+  constructor(board: Board, index: number, label: string){
+    this.board = board;
     this.index = index;
-    this.region = region;
-    this.region.addCell(this);
-    this.row = row;
-    this.row.addCell(this);
-    this.col = col;
-    this.col.addCell(this);
-    this.label = `${this.col.id},${this.row.id},${this.region.id}`;
+    this.label = label;
+  }
+
+  region() {
+    return this.board.regionForCell(this.index);
+  }
+
+  row() {
+    return this.board.rowForCell(this.index);
+  }
+
+  col() {
+    return this.board.colForCell(this.index);
   }
 
   state(currentState: State){
@@ -103,6 +107,7 @@ export class Board {
   rows: Container[];
   cols: Container[];
   regions: { [key: string]: Container };
+  regionsByCellIndex: { [key: number]: Container };
 
   constructor(regionSpec: RegionSpec, fillCount: number=1){
     this.size = regionSpec.length;
@@ -111,6 +116,8 @@ export class Board {
     this.rows = [];
     this.cols = [];
     this.regions = {};
+    this.regionsByCellIndex = {};
+
     for(let i=0; i<this.size; i++){
       this.rows.push(new Container(i.toString()));
       this.cols.push(new Container(i.toString()));
@@ -129,12 +136,30 @@ export class Board {
           region = new Container(regionId);
           this.regions[regionId] = region;
         }
-        this.cells.push(new Cell(this.cells.length, region, row, col));
+        const label = `${col.id},${row.id},${region.id}`;
+        const cell = new Cell(this, this.cells.length, label);
+        this.cells.push(cell);
+        this.regionsByCellIndex[cell.index] = region;
+        region.addCell(cell);
+        row.addCell(cell);
+        col.addCell(cell);
       }
     }
     if (Object.keys(this.regions).length !== this.size){
       throw new Error(`Invalid number of regions. Found ${Object.keys(this.regions)}, expected ${this.size}`);
     }
+  }
+
+  regionForCell(index: number): Container{
+    return this.regionsByCellIndex[index];
+  }
+
+  rowForCell(index: number): Container{
+    return this.cols[Math.floor(index / this.size)];
+  }
+
+  colForCell(index: number): Container{
+    return this.rows[index % this.size];
   }
 
   neighbors(cell: Cell): Cell[] {

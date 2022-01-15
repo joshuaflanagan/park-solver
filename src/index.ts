@@ -6,7 +6,7 @@ function render(board: Board, state: string[], highlights: number[]){
     let row = "";
     for(let c=0;c<board.size; c++){
       const cell = board.cells[ r*board.size + c ];
-      row += `${cell.region.id} `;
+      row += `${cell.region().id} `;
     }
     console.log(row);
   }

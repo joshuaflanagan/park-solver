@@ -38,11 +38,40 @@ describe("Building a Board", () => {
     expect(board.cells[24].label).toEqual("4,4,e");
   });
 
+  test("Can identify the column, given a cell index", () => {
+    const board = new Board(validRegionSpec);
+    expect(board.colForCell(0).id).toBe("0");
+    expect(board.colForCell(1).id).toBe("1");
+    expect(board.colForCell(5).id).toBe("0");
+    expect(board.colForCell(23).id).toBe("3");
+    expect(board.colForCell(24).id).toBe("4");
+  });
+
+  test("Can identify the row, given a cell index", () => {
+    const board = new Board(validRegionSpec);
+    expect(board.rowForCell(0).id).toBe("0");
+    expect(board.rowForCell(1).id).toBe("0");
+    expect(board.rowForCell(5).id).toBe("1");
+    expect(board.rowForCell(23).id).toBe("4");
+    expect(board.rowForCell(24).id).toBe("4");
+  });
+
+  test("Can identify the region, given a cell index", () => {
+    const board = new Board(validRegionSpec);
+    expect(board.regionForCell(0).id).toBe("a");
+    expect(board.regionForCell(1).id).toBe("a");
+    expect(board.regionForCell(4).id).toBe("b");
+    expect(board.regionForCell(5).id).toBe("a");
+    expect(board.regionForCell(6).id).toBe("c");
+    expect(board.regionForCell(23).id).toBe("e");
+    expect(board.regionForCell(24).id).toBe("e");
+  });
+
   test("Each cell is associated with a region", () => {
     const board = new Board(validRegionSpec);
-    expect(board.cells[0].region.id).toEqual("a");
-    expect(board.cells[3].region.id).toEqual("b");
-    expect(board.cells[6].region.id).toEqual("c");
+    expect(board.cells[0].region().id).toEqual("a");
+    expect(board.cells[3].region().id).toEqual("b");
+    expect(board.cells[6].region().id).toEqual("c");
   });
 
   test("A valid board has 'size' regions", () => {
@@ -54,20 +83,20 @@ describe("Building a Board", () => {
     const board = new Board(validRegionSpec);
     const cell1 = board.cells[3];
     const cell2 = board.cells[0];
-    expect(cell1.region).not.toEqual(cell2.region); // make sure they are in separate regions
-    const region = cell1.region;
+    expect(cell1.region()).not.toBe(cell2.region()); // make sure they are in separate regions
+    const region = cell1.region();
     expect(region.cells).toContain(cell1);
     expect(region.cells).not.toContain(cell2);
   });
 
   test("Each cell is associated with a Row", () => {
     const board = new Board(validRegionSpec);
-    expect(board.cells[0].row.id).toEqual("0");
-    expect(board.cells[1].row.id).toEqual("0");
-    expect(board.cells[6].row.id).toEqual("1");
-    expect(board.cells[10].row.id).toEqual("2");
-    expect(board.cells[15].row.id).toEqual("3");
-    expect(board.cells[24].row.id).toEqual("4");
+    expect(board.cells[0].row().id).toEqual("0");
+    expect(board.cells[1].row().id).toEqual("0");
+    expect(board.cells[6].row().id).toEqual("1");
+    expect(board.cells[10].row().id).toEqual("2");
+    expect(board.cells[15].row().id).toEqual("3");
+    expect(board.cells[24].row().id).toEqual("4");
   });
 
   test("A valid board has 'size' rows", () => {
@@ -77,12 +106,12 @@ describe("Building a Board", () => {
 
   test("Each cell is associated with a Col", () => {
     const board = new Board(validRegionSpec);
-    expect(board.cells[0].col.id).toEqual("0");
-    expect(board.cells[1].col.id).toEqual("1");
-    expect(board.cells[4].col.id).toEqual("4");
-    expect(board.cells[5].col.id).toEqual("0");
-    expect(board.cells[7].col.id).toEqual("2");
-    expect(board.cells[13].col.id).toEqual("3");
+    expect(board.cells[0].col().id).toEqual("0");
+    expect(board.cells[1].col().id).toEqual("1");
+    expect(board.cells[4].col().id).toEqual("4");
+    expect(board.cells[5].col().id).toEqual("0");
+    expect(board.cells[7].col().id).toEqual("2");
+    expect(board.cells[13].col().id).toEqual("3");
   });
 
   test("A valid board has 'size' cols", () => {
