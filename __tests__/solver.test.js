@@ -22,7 +22,7 @@ describe("Determine the next move", () => {
     expect(nextMove.reason).toEqual("only-option-region");
     expect(nextMove.changes[0].changeTo).toEqual("full");
     expect(nextMove.changes[0].because.length).toEqual(1);
-    expect(nextMove.changes[0].because[0].region().id).toEqual("d");
+    expect(nextMove.changes[0].because[0].region().label).toEqual("d");
   });
 
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {

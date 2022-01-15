@@ -50,12 +50,19 @@ const util = require('util');
 
 type RegionSpec = Array<string[]>
 
-export class Container {
-  id: string;
+interface Identifiable {
+  index: number;
+  label: string;
+}
+
+export class Container implements Identifiable {
+  index: number;
+  label: string;
   cells: Cell[];
 
-  constructor(id: string){
-    this.id = id;
+  constructor(index: number, label: string){
+    this.index = index;
+    this.label = label;
     this.cells = [];
   }
 
@@ -68,7 +75,7 @@ export class Container {
   }
 }
 
-export class Cell {
+export class Cell implements Identifiable {
   board: Board;
   index: number;
   label: string;
@@ -121,8 +128,8 @@ export class Board {
     this.regionsByCellIndex = {};
 
     for(let i=0; i<this.size; i++){
-      this.rows.push(new Container(i.toString()));
-      this.cols.push(new Container(i.toString()));
+      this.rows.push(new Container(i, i.toString()));
+      this.cols.push(new Container(i, i.toString()));
     }
     for(let r=0; r<this.size; r++){
       const row = this.rows[r];
@@ -135,11 +142,11 @@ export class Board {
         const regionLabel = rowSpec[c];
         let region = this.regionsByLabel[regionLabel];
         if (!region){
-          region = new Container(regionLabel);
+          region = new Container(this.regions.length, regionLabel);
           this.regions.push(region);
           this.regionsByLabel[regionLabel] = region;
         }
-        const label = `${col.id},${row.id},${region.id}`;
+        const label = `${col.label},${row.label},${region.label}`;
         const cell = new Cell(this, this.cells.length, label);
         this.cells.push(cell);
         this.regionsByCellIndex[cell.index] = region;
