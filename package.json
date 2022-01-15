@@ -2,8 +2,8 @@
   "name": "park-solver",
   "version": "1.0.0",
   "description": "Solve iOS Parks app puzzles",
-  "main": "lib/src/index.js",
-  "typings": "lib/src/index.d.ts",
+  "main": "src/index.js",
+  "typings": "src/index.d.ts",
   "author": "Joshua Flanagan",
   "license": "MIT",
   "scripts": {
