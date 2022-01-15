@@ -1,6 +1,6 @@
-import { Board, Container } from "../src/board";
-import { Solver, Move, Change } from "../src/solver";
-import { CellState } from "../src/state";
+const { Board, Container } = require( "../src/board");
+const { Solver, Move, Change } = require( "../src/solver");
+const { CellState } = require( "../src/state");
 
 
 describe("Determine the next move", () => {
@@ -62,12 +62,11 @@ describe("Determine the next move", () => {
     });
   });
 
-  const hasChangeToCell = function(move: Move, cellLabel: string, state?: CellState): Change {
-    const maybeChange = move.changes.find(c => c.cell.label === cellLabel);
-    if (!maybeChange){
+  const hasChangeToCell = function(move, cellLabel, state) {
+    const change = move.changes.find(c => c.cell.label === cellLabel);
+    if (!change){
       throw new Error("Did not find change for cell with label " + cellLabel);
     }
-    const change = maybeChange!;
     if (state){
       expect(change.changeTo).toEqual(state);
     }

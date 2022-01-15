@@ -1,4 +1,4 @@
-import { Board } from "../src/board";
+const { Board } = require("../src/board");
 
 describe("Building a Board", () => {
   const validRegionSpec = [
