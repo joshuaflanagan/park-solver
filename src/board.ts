@@ -50,12 +50,19 @@ const util = require('util');
 
 type RegionSpec = Array<string[]>
 
-export class Container {
-  id: string;
+interface Identifiable {
+  index: number;
+  label: string;
+}
+
+export class Container implements Identifiable {
+  index: number;
+  label: string;
   cells: Cell[];
 
-  constructor(id: string){
-    this.id = id;
+  constructor(index: number, label: string){
+    this.index = index;
+    this.label = label;
     this.cells = [];
   }
 
@@ -68,27 +75,31 @@ export class Container {
   }
 }
 
-//TODO: maybe a cell doesn't need references to row/col/region
-// could replace the properties with methods.
-export class Cell {
+export class Cell implements Identifiable {
+  board: Board;
   index: number;
-  row: Container;
-  col: Container;
-  region: Container;
   label: string;
-  constructor(index: number, region: Container, row: Container, col: Container){
+
+  constructor(board: Board, index: number, label: string){
+    this.board = board;
     this.index = index;
-    this.region = region;
-    this.region.addCell(this);
-    this.row = row;
-    this.row.addCell(this);
-    this.col = col;
-    this.col.addCell(this);
-    this.label = `${this.col.id},${this.row.id},${this.region.id}`;
+    this.label = label;
+  }
+
+  region() {
+    return this.board.regionForCell(this.index);
+  }
+
+  row() {
+    return this.board.rowForCell(this.index);
+  }
+
+  col() {
+    return this.board.colForCell(this.index);
   }
 
   state(currentState: State){
-    return currentState[this.index];
+    return currentState.cell(this.index);
   }
 
   [util.inspect.custom](){
@@ -102,7 +113,9 @@ export class Board {
   cells: Cell[];
   rows: Container[];
   cols: Container[];
-  regions: { [key: string]: Container };
+  regions: Container[];
+  regionsByLabel: { [key: string]: Container };
+  regionsByCellIndex: { [key: number]: Container };
 
   constructor(regionSpec: RegionSpec, fillCount: number=1){
     this.size = regionSpec.length;
@@ -110,10 +123,13 @@ export class Board {
     this.cells = [];
     this.rows = [];
     this.cols = [];
-    this.regions = {};
+    this.regions = [];
+    this.regionsByLabel = {};
+    this.regionsByCellIndex = {};
+
     for(let i=0; i<this.size; i++){
-      this.rows.push(new Container(i.toString()));
-      this.cols.push(new Container(i.toString()));
+      this.rows.push(new Container(i, i.toString()));
+      this.cols.push(new Container(i, i.toString()));
     }
     for(let r=0; r<this.size; r++){
       const row = this.rows[r];
@@ -123,18 +139,37 @@ export class Board {
       }
       for(let c=0; c<this.size; c++){
         const col = this.cols[c];
-        const regionId = rowSpec[c];
-        let region = this.regions[regionId];
+        const regionLabel = rowSpec[c];
+        let region = this.regionsByLabel[regionLabel];
         if (!region){
-          region = new Container(regionId);
-          this.regions[regionId] = region;
+          region = new Container(this.regions.length, regionLabel);
+          this.regions.push(region);
+          this.regionsByLabel[regionLabel] = region;
         }
-        this.cells.push(new Cell(this.cells.length, region, row, col));
+        const label = `${col.label},${row.label},${region.label}`;
+        const cell = new Cell(this, this.cells.length, label);
+        this.cells.push(cell);
+        this.regionsByCellIndex[cell.index] = region;
+        region.addCell(cell);
+        row.addCell(cell);
+        col.addCell(cell);
       }
     }
-    if (Object.keys(this.regions).length !== this.size){
-      throw new Error(`Invalid number of regions. Found ${Object.keys(this.regions)}, expected ${this.size}`);
+    if (Object.keys(this.regionsByLabel).length !== this.size){
+      throw new Error(`Invalid number of regions. Found ${Object.keys(this.regionsByLabel)}, expected ${this.size}`);
     }
+  }
+
+  regionForCell(index: number): Container{
+    return this.regionsByCellIndex[index];
+  }
+
+  rowForCell(index: number): Container{
+    return this.cols[Math.floor(index / this.size)];
+  }
+
+  colForCell(index: number): Container{
+    return this.rows[index % this.size];
   }
 
   neighbors(cell: Cell): Cell[] {
@@ -185,6 +220,6 @@ export class Board {
   }
 
   createState(){
-    return new Array(this.cells.length);
+    return new State(this.cells.length);
   }
 }

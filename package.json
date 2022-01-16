@@ -9,7 +9,7 @@
   "scripts": {
     "compile": "tsc",
     "start": "tsc && node .",
-    "test": "jest"
+    "test": "tsc && jest"
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",

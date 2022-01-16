@@ -1,11 +1,5 @@
 import { Board, Container, Cell } from "./board";
-import { CellState, State } from "./state";
-
-// instead of container-full, consider column-full, row-full, region-full - if we have the info
-// also need - surrounds-full-cell
-type MoveReason = "invalid-state" | "container-full" |
-  "blocks-all-region"| "blocks-all-col"| "blocks-all-row"|
-  "only-option-region"| "only-option-col"| "only-option-row";
+import { CellState, State, Change, Move } from "./state";
 
 
 /*
@@ -23,17 +17,6 @@ type MoveReason = "invalid-state" | "container-full" |
  * - it blocks all of an unfull Container's options - because: [all container's cells, or just the empty ones]
  */
 
-export interface Change {
-  cell: Cell;
-  changeTo: CellState;
-  because: Cell[];
-}
-
-export interface Move {
-  reason: MoveReason;
-  changes: Change[];
-}
-
 export class Solver {
   board: Board;
 
@@ -43,40 +26,40 @@ export class Solver {
 
   _changesForFull(cell: Cell, state: State): Change[]{
     const candidates: Change[] = [{
-      cell: cell,
+      cell: cell.index,
       changeTo: "full",
-      because: [cell]
+      because: [cell.index]
     },
       // surrounding
       ...this.board.neighbors(cell).map(n => {
         return {
-          cell: n,
+          cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell]
+          because: [cell.index]
         }
       }),
       // same row
-      ...cell.row.cells.filter(n => !n.state(state)).map(n => {
+      ...cell.row().cells.filter(n => !n.state(state)).map(n => {
         return {
-          cell: n,
+          cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell]
+          because: [cell.index]
         }
       }),
       // same col
-      ...cell.col.cells.filter(n => !n.state(state)).map(n => {
+      ...cell.col().cells.filter(n => !n.state(state)).map(n => {
         return {
-          cell: n,
+          cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell]
+          because: [cell.index]
         }
       }),
       // same region
-      ...cell.region.cells.filter(n => !n.state(state)).map(n => {
+      ...cell.region().cells.filter(n => !n.state(state)).map(n => {
         return {
-          cell: n,
+          cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell]
+          because: [cell.index]
         }
       }),
       // TODO: need to dedup across row,col,region
@@ -85,8 +68,8 @@ export class Solver {
     const seen = new Set();
 
     candidates.forEach(candidate => {
-      if (!seen.has(candidate.cell.index)){
-        seen.add(candidate.cell.index);
+      if (!seen.has(candidate.cell)){
+        seen.add(candidate.cell);
         deduped.push(candidate);
       }
     })
@@ -96,8 +79,7 @@ export class Solver {
 
   //TODO: probably want a Move to have an array of cells, to handle "inline".
   nextMove(state: State): Move {
-    for(const regionId in this.board.regions){
-      const region = this.board.regions[regionId];
+    for(const region of this.board.regions){
       const freeCells = region.freeCells(state);
       if (freeCells.length === 1){
         return {

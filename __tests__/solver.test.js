@@ -20,9 +20,10 @@ describe("Determine the next move", () => {
     const nextMove = solver.nextMove(state);
 
     expect(nextMove.reason).toEqual("only-option-region");
-    expect(nextMove.changes[0].changeTo).toEqual("full");
-    expect(nextMove.changes[0].because.length).toEqual(1);
-    expect(nextMove.changes[0].because[0].region.id).toEqual("d");
+    const change = nextMove.changes[0];
+    expect(change.changeTo).toEqual("full");
+    expect(change.because.length).toEqual(1);
+    expect(board.regionForCell(change.because[0]).label).toEqual("d");
   });
 
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {
@@ -57,15 +58,20 @@ describe("Determine the next move", () => {
       "2,0,a",
       "2,4,c",
     ].forEach(label => {
-      const change = hasChangeToCell(nextMove, label, "blocked");
+      const change = hasChangeToCell(board, nextMove, label, "blocked");
       expect(change.because).toEqual([fullCell]);
     });
   });
 
-  const hasChangeToCell = function(move, cellLabel, state) {
-    const change = move.changes.find(c => c.cell.label === cellLabel);
+  const hasChangeToCell = function(board, move, cellLabel, state) {
+    const targetCell = board.cells.find(c => c.label == cellLabel);
+    if (!targetCell) {
+      throw new Error(`Test refers to an invalid cell label: ${cellLabel}`);
+    }
+    const targetIndex = targetCell.index;
+    const change = move.changes.find(c => c.cell === targetIndex);
     if (!change){
-      throw new Error("Did not find change for cell with label " + cellLabel);
+      throw new Error(`Did not find change for cell with label ${cellLabel} (index: ${targetIndex})`);
     }
     if (state){
       expect(change.changeTo).toEqual(state);
