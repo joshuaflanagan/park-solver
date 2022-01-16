@@ -103,7 +103,7 @@ describe("Determine the next move", () => {
 
     const board = new Board(regionSpec);
     let state = board.createState();
-    // block everything in 2nd row, except first a
+    // block all a's, except 2 on second row
     state = state.change({
       changes: [
         {cell: board.cellIndex([1, 0]), changeTo: "blocked"},
@@ -126,6 +126,40 @@ describe("Determine the next move", () => {
     expect(change.because.length).toEqual(2);
     expect(change.because[0]).toEqual(board.cellIndex([2,1]));
     expect(change.because[1]).toEqual(board.cellIndex([4,1]));
+  });
+
+  test("If a region only has options in one col - block others in that col", () => {
+    const regionSpec = [
+      ["b", "b", "a", "a", "e"],
+      ["b", "a", "a", "a", "a"],
+      ["b", "d", "d", "e", "e"],
+      ["b", "c", "d", "e", "e"],
+      ["c", "c", "c", "e", "e"],
+    ];
+
+    const board = new Board(regionSpec);
+    let state = board.createState();
+    // block all b's, except 2 in first column
+    state = state.change({
+      changes: [
+        {cell: board.cellIndex([1, 0]), changeTo: "blocked"},
+        {cell: board.cellIndex([0, 1]), changeTo: "blocked"},
+        {cell: board.cellIndex([0, 3]), changeTo: "blocked"},
+      ]
+    });
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(state);
+
+    const change = nextMove.changes[0];
+    // should block c in first column
+    expect(change).toBeDefined();
+    expect(change.cell).toBe( board.cellIndex([0,4]));
+    expect(change.changeTo).toEqual("blocked");
+    expect(nextMove.reason).toEqual("blocks-all-region");
+    expect(change.because.length).toEqual(2);
+    expect(change.because[0]).toEqual(board.cellIndex([0,0]));
+    expect(change.because[1]).toEqual(board.cellIndex([0,2]));
   });
 
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {

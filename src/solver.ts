@@ -111,6 +111,7 @@ export class Solver {
       this._onlyContainerOption( "only-option-col", b => b.cols ),
       this._onlyContainerOption( "only-option-row", b => b.rows ),
       this._singleRowRegion,
+      this._singleColRegion,
     ];
 
     for(const strategy of strategies){
@@ -155,6 +156,30 @@ export class Solver {
       // find other free cells in same row
       const rowCells = this.board.rows[row].freeCells(state)
       const otherCells = rowCells.filter(c => c.region() !== region);
+      if (!otherCells.length) continue;
+      return {
+        reason: "blocks-all-region",
+        changes: otherCells.map( c => ({
+          cell: c.index,
+          changeTo: "blocked",
+          because: regionCells.map(rc => rc.index)
+        }))
+      };
+    }
+    return null;
+  }
+
+  _singleColRegion(state: State): Move|null {
+    for(const region of this.board.regions){
+      const regionCells = region.freeCells(state);
+      if (!regionCells.length) continue; // resolved region
+      // can assume more than 1, otherwise earlier strategy would have found it
+      const [first, ...rest] = regionCells;
+      const col = first.col().index;
+      if (rest.some( c => c.col().index !== col)) continue;
+      // find other free cells in same col
+      const colCells = this.board.cols[col].freeCells(state)
+      const otherCells = colCells.filter(c => c.region() !== region);
       if (!otherCells.length) continue;
       return {
         reason: "blocks-all-region",
