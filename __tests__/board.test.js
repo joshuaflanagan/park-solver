@@ -173,7 +173,7 @@ describe("Building a State", () => {
   test("Can create a new state object with a value per cell in the board", ()=> {
     const board = new Board(validRegionSpec);
     const state = board.createState();
-    expect(state.length).toEqual(board.cells.length);
+    expect(state.cellCount).toEqual(board.cells.length);
   });
 });
 
@@ -188,21 +188,23 @@ describe("Checking for free cells in a region", () => {
 
   test("Returns an empty array when all cells are blocked or full", () => {
     const board = new Board(regionSpec);
-    const state = board.createState();
-    state.fill("blocked");
-    state[0] = "full";
+    let state = board.createState();
+    state = state.fill("blocked");
+    state = state.change({changes: [{cell: 0, changeTo: "full"}]});
 
     const freeCells = board.regionsByLabel["a"].freeCells(state);
-    expect(freeCells).toEqual([]);
+    expect(freeCells.map(x => x.label)).toEqual([]);
   });
 
   test("Returns an array of cells in the region that are not blocked or full", () => {
     const board = new Board(regionSpec);
-    const state = board.createState();
-    state.fill("blocked");
-    state[1] = undefined;
-    state[3] = undefined;
-    state[6] = undefined;
+    let state = board.createState();
+    state = state.fill("blocked");
+    state = state.change({changes: [
+      {cell: 1, changeTo: undefined},
+      {cell: 3, changeTo: undefined},
+      {cell: 6, changeTo: undefined},
+    ]});
 
     const freeCells = board.regionsByLabel["a"].freeCells(state);
     expect(freeCells).toEqual([

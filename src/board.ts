@@ -99,7 +99,7 @@ export class Cell implements Identifiable {
   }
 
   state(currentState: State){
-    return currentState[this.index];
+    return currentState.cell(this.index);
   }
 
   [util.inspect.custom](){
@@ -220,6 +220,6 @@ export class Board {
   }
 
   createState(){
-    return new Array(this.cells.length);
+    return new State(this.cells.length);
   }
 }

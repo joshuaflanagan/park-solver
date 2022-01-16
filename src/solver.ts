@@ -1,11 +1,5 @@
 import { Board, Container, Cell } from "./board";
-import { CellState, State } from "./state";
-
-// instead of container-full, consider column-full, row-full, region-full - if we have the info
-// also need - surrounds-full-cell
-type MoveReason = "input" | "invalid-state" | "container-full" |
-  "blocks-all-region"| "blocks-all-col"| "blocks-all-row"|
-  "only-option-region"| "only-option-col"| "only-option-row";
+import { CellState, State, Change, Move } from "./state";
 
 
 /*
@@ -22,17 +16,6 @@ type MoveReason = "input" | "invalid-state" | "container-full" |
  * - it is in the same Container as a full cell - because: [the full cell]
  * - it blocks all of an unfull Container's options - because: [all container's cells, or just the empty ones]
  */
-
-export interface Change {
-  cell: number;
-  changeTo: CellState;
-  because: number[];
-}
-
-export interface Move {
-  reason: MoveReason;
-  changes: Change[];
-}
 
 export class Solver {
   board: Board;
