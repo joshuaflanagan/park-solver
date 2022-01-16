@@ -10,7 +10,7 @@ export interface Change {
 
 // instead of container-full, consider column-full, row-full, region-full - if we have the info
 // also need - surrounds-full-cell
-type MoveReason = "input" | "invalid-state" | "container-full" |
+export type MoveReason = "input" | "invalid-state" | "container-full" |
   "blocks-all-region"| "blocks-all-col"| "blocks-all-row"|
   "only-option-region"| "only-option-col"| "only-option-row";
 export interface Move {

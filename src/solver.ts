@@ -1,5 +1,5 @@
 import { Board, Container, Cell } from "./board";
-import { CellState, State, Change, Move } from "./state";
+import { CellState, State, Change, Move, MoveReason } from "./state";
 
 
 /*
@@ -105,14 +105,16 @@ export class Solver {
     //      of a user. 
     //      - try the whole board with 1 move look ahead. if that doesn't lead
     //        to anything fruitful, try with 2 move look ahead.
-    for(const region of this.board.regions){
-      const freeCells = region.freeCells(state);
-      if (freeCells.length === 1){
-        return {
-          reason: "only-option-region",
-          changes: this._changesForFull(freeCells[0], state)
-        };
-      }
+
+    const strategies = [
+      this._onlyContainerOption( "only-option-region", b => b.regions ),
+      this._onlyContainerOption( "only-option-col", b => b.cols ),
+      this._onlyContainerOption( "only-option-row", b => b.rows ),
+    ];
+
+    for(const strategy of strategies){
+      const move = strategy(state);
+      if (move) return move;
     }
     // invalid state - return a sentinel object?
     // there can be 2 no-op "moves" - board complete, or board invalid
@@ -121,5 +123,23 @@ export class Solver {
       reason: "invalid-state",
       changes: []
     };
+  }
+
+  _onlyContainerOption(
+    reason: MoveReason,
+    containerSource: (b: Board) => Container[]
+  ): (s: State) => Move|null {
+    return (state: State): Move|null => {
+      for(const container of containerSource(this.board)){
+        const freeCells = container.freeCells(state);
+        if (freeCells.length === 1){
+          return {
+            reason: reason,
+            changes: this._changesForFull(freeCells[0], state)
+          };
+        }
+      }
+      return null;
+    }
   }
 }

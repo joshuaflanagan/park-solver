@@ -26,6 +26,72 @@ describe("Determine the next move", () => {
     expect(board.regionForCell(change.because[0]).label).toEqual("d");
   });
 
+  test("Can recognize a column with only one option", () => {
+    const regionSpec = [
+      ["a", "a", "a", "a", "a"],
+      ["b", "a", "a", "a", "a"],
+      ["b", "d", "d", "e", "e"],
+      ["c", "c", "c", "e", "e"],
+      ["c", "c", "c", "e", "e"],
+    ];
+
+    const board = new Board(regionSpec);
+    let state = board.createState();
+    // block 4th column, except in 3rd row
+    state = state.change({
+      changes: [
+        {cell: 3, changeTo: "blocked"},
+        {cell: 8, changeTo: "blocked"},
+        {cell: 18, changeTo: "blocked"},
+        {cell: 23, changeTo: "blocked"},
+      ]
+    });
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(state);
+
+    const change = nextMove.changes[0];
+    expect(change).toBeDefined();
+    expect(change.changeTo).toEqual("full");
+    expect(change.cell).toBe(13);
+    expect(nextMove.reason).toEqual("only-option-col");
+    expect(change.because.length).toEqual(1);
+    expect(board.colForCell(change.because[0]).label).toEqual("3");
+  });
+
+  test("Can recognize a row with only one option", () => {
+    const regionSpec = [
+      ["a", "a", "a", "a", "a"],
+      ["b", "a", "a", "a", "a"],
+      ["b", "d", "d", "e", "e"],
+      ["b", "c", "c", "e", "e"],
+      ["c", "c", "c", "e", "e"],
+    ];
+
+    const board = new Board(regionSpec);
+    let state = board.createState();
+    // block everything in 2nd row, except first a
+    state = state.change({
+      changes: [
+        {cell: 5, changeTo: "blocked"},
+        {cell: 7, changeTo: "blocked"},
+        {cell: 8, changeTo: "blocked"},
+        {cell: 9, changeTo: "blocked"},
+      ]
+    });
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(state);
+
+    const change = nextMove.changes[0];
+    expect(change).toBeDefined();
+    expect(change.changeTo).toEqual("full");
+    expect(change.cell).toBe(6);
+    expect(nextMove.reason).toEqual("only-option-row");
+    expect(change.because.length).toEqual(1);
+    expect(board.rowForCell(change.because[0]).label).toEqual("1");
+  });
+
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {
     const regionSpec = [
       ["a", "a", "a", "a", "a"],
