@@ -1,6 +1,7 @@
 import { State } from "../src/state";
 import { Board } from "../src/board";
 
+// copied from https://stackoverflow.com/a/41407246
 const colors: {[key: string]: string} = {
   "reset": "\x1b[0m",
   "BgBlack": "\x1b[40m",
