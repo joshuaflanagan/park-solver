@@ -1,27 +1,6 @@
-import { State } from "../src/state";
 import { Board } from "../src/board";
 import { Solver } from "../src/solver";
-
-function render(board: Board, state: State, highlights: number[]){
-  for(let r=0; r<board.size; r++){
-    let row = "";
-    for(let c=0;c<board.size; c++){
-      const cell = board.cells[ r*board.size + c ];
-      const cellVal = state.cell(cell.index);
-      let rval = cell.region().label;
-      switch(cellVal){
-        case "blocked":
-          rval = "x";
-          break;
-        case "full":
-          rval = "O";
-          break;
-      }
-      row += `${rval} `;
-    }
-    console.log(row);
-  }
-}
+import { render } from "../src/console-render";
 
 const regionSpec = [
   ["a", "a", "a", "a", "a"],
