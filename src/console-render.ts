@@ -43,5 +43,6 @@ export function render(board: Board, state: State, highlights: number[]){
     }
     console.log(row);
   }
+  console.log();
 }
 

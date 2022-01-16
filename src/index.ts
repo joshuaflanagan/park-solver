@@ -17,8 +17,11 @@ let state = board.createState();
 render(board, state, []);
 
 const solver = new Solver(board);
-const nextMove = solver.nextMove(state);
-console.log("nextMove:", nextMove);
-
-state = state.change(nextMove);
-render(board, state, []);
+let nextMove = solver.nextMove(state);
+while (nextMove.reason != "invalid-state"){
+  console.log("Applying: ", nextMove);
+  state = state.change(nextMove);
+  render(board, state, []);
+  nextMove = solver.nextMove(state);
+}
+console.log("No further moves");
