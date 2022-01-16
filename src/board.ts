@@ -165,18 +165,26 @@ export class Board {
   }
 
   rowForCell(index: number): Container{
-    return this.cols[Math.floor(index / this.size)];
+    return this.rows[this.rowIndexForCell(index)];
   }
 
   colForCell(index: number): Container{
-    return this.rows[index % this.size];
+    return this.cols[this.colIndexForCell(index)];
+  }
+
+  rowIndexForCell(index: number): number{
+    return Math.floor(index / this.size);
+  }
+
+  colIndexForCell(index: number): number{
+    return index % this.size;
   }
 
   neighbors(cell: Cell): Cell[] {
     const result = [];
     const index = cell.index;
-    const row = index % this.size;
-    const col = Math.floor(index / this.size);
+    const row = this.rowIndexForCell(index);
+    const col = this.colIndexForCell(index);
     const boundary = this.size - 1;
     // Return neighbors in clockwise order
 
