@@ -79,6 +79,32 @@ export class Solver {
 
   //TODO: probably want a Move to have an array of cells, to handle "inline".
   nextMove(state: State): Move {
+    // Steps to solve:
+    // - check all Containers to see if they only have 1 option
+    // - check cols/regions to see if only options are in same row
+    //    - if so, block all cells outside of the container in that row
+    //    - if the free cells in container are 2 consecutive, block their
+    //      neighbors above and below (since the neighbors would block both
+    //      options)
+    // - check rows/regions to see if only options are in same col
+    //    - if so, block all cells outside of the container in that col
+    //    - if the free cells in container are 2 consecutive, block their
+    //      neighbors to left and right (since the neighbors would block both
+    //      options)
+    //  - test each cell to see if they would block any containers's only options
+    //    - the inline checks above are a special case of this, but worth the
+    //      optimization
+    //  - incomplete - need to generalize this better. When there are 2 regions
+    //    whose only options are in the same 2 columns, block all other cells
+    //    in those columns if they dont belong to those regions. Works for
+    //    higher counts as well (3 regions whose only options in same 3 cols).
+    //  - explore! This should be the last strategy, when all other fail.
+    //      Test each possible move to see if it leads to an invalid
+    //      state. Need to limit how many moves it looks ahead, otherwise it
+    //      becomes a brute-force solver, which isn't a realistic simulation
+    //      of a user. 
+    //      - try the whole board with 1 move look ahead. if that doesn't lead
+    //        to anything fruitful, try with 2 move look ahead.
     for(const region of this.board.regions){
       const freeCells = region.freeCells(state);
       if (freeCells.length === 1){
