@@ -11,8 +11,18 @@ const colors: {[key: string]: string} = {
   "blue": "\x1b[44m",
   "magenta": "\x1b[45m",
   "cyan": "\x1b[46m",
+
+  "gray": "\x1b[100m",
+  "bright_red": "\x1b[101m",
+  "bright_green": "\x1b[102m",
+  "bright_yellow": "\x1b[103m",
+  "bright_blue": "\x1b[104m",
+  "bright_magenta": "\x1b[105m",
 }
-const colorsToUse = ["red", "green", "yellow", "blue", "magenta", "cyan"];
+const colorsToUse = ["red", "green", "yellow", "blue", "magenta", "cyan",
+  "gray", "bright_red", "bright_blue", "bright_green", "bright_yellow", "bright_green",
+  "bright_magenta",
+];
 
 export function render(board: Board, state: State, highlights: number[]){
   const regionColors: {[key: string]: string} = {};
