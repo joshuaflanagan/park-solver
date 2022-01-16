@@ -92,6 +92,42 @@ describe("Determine the next move", () => {
     expect(board.rowForCell(change.because[0]).label).toEqual("1");
   });
 
+  test("If a region only has options in one row - block others in that row", () => {
+    const regionSpec = [
+      ["b", "a", "a", "a", "e"],
+      ["b", "a", "a", "a", "a"],
+      ["b", "d", "d", "e", "e"],
+      ["b", "c", "c", "e", "e"],
+      ["c", "c", "c", "e", "e"],
+    ];
+
+    const board = new Board(regionSpec);
+    let state = board.createState();
+    // block everything in 2nd row, except first a
+    state = state.change({
+      changes: [
+        {cell: board.cellIndex([1, 0]), changeTo: "blocked"},
+        {cell: board.cellIndex([2, 0]), changeTo: "blocked"},
+        {cell: board.cellIndex([3, 0]), changeTo: "blocked"},
+
+        {cell: board.cellIndex([1, 1]), changeTo: "blocked"},
+        {cell: board.cellIndex([3, 1]), changeTo: "blocked"},
+      ]
+    });
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(state);
+
+    const change = nextMove.changes[0];
+    expect(change).toBeDefined();
+    expect(change.cell).toBe( board.cellIndex([0,1]));
+    expect(change.changeTo).toEqual("blocked");
+    expect(nextMove.reason).toEqual("blocks-all-region");
+    expect(change.because.length).toEqual(2);
+    expect(change.because[0]).toEqual(board.cellIndex([2,1]));
+    expect(change.because[1]).toEqual(board.cellIndex([4,1]));
+  });
+
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {
     const regionSpec = [
       ["a", "a", "a", "a", "a"],

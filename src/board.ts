@@ -180,6 +180,10 @@ export class Board {
     return index % this.size;
   }
 
+  cellIndex(coords: [number, number]): number{
+    return coords[1] * this.size + coords[0];
+  }
+
   neighbors(cell: Cell): Cell[] {
     const result = [];
     const index = cell.index;

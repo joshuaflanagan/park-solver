@@ -81,12 +81,12 @@ export class Solver {
   nextMove(state: State): Move {
     // Steps to solve:
     // - check all Containers to see if they only have 1 option
-    // - check cols/regions to see if only options are in same row
+    // - check rows/regions to see if only options are in same row
     //    - if so, block all cells outside of the container in that row
     //    - if the free cells in container are 2 consecutive, block their
     //      neighbors above and below (since the neighbors would block both
     //      options)
-    // - check rows/regions to see if only options are in same col
+    // - check cols/regions to see if only options are in same col
     //    - if so, block all cells outside of the container in that col
     //    - if the free cells in container are 2 consecutive, block their
     //      neighbors to left and right (since the neighbors would block both
@@ -110,10 +110,11 @@ export class Solver {
       this._onlyContainerOption( "only-option-region", b => b.regions ),
       this._onlyContainerOption( "only-option-col", b => b.cols ),
       this._onlyContainerOption( "only-option-row", b => b.rows ),
+      this._singleRowRegion,
     ];
 
     for(const strategy of strategies){
-      const move = strategy(state);
+      const move = strategy.call(this, state);
       if (move) return move;
     }
     // invalid state - return a sentinel object?
@@ -141,5 +142,29 @@ export class Solver {
       }
       return null;
     }
+  }
+
+  _singleRowRegion(state: State): Move|null {
+    for(const region of this.board.regions){
+      const regionCells = region.freeCells(state);
+      if (!regionCells.length) continue; // resolved region
+      // can assume more than 1, otherwise earlier strategy would have found it
+      const [first, ...rest] = regionCells;
+      const row = first.row().index;
+      if (rest.some( c => c.row().index !== row)) continue;
+      // find other free cells in same row
+      const rowCells = this.board.rows[row].freeCells(state)
+      const otherCells = rowCells.filter(c => c.region() !== region);
+      if (!otherCells.length) continue;
+      return {
+        reason: "blocks-all-region",
+        changes: otherCells.map( c => ({
+          cell: c.index,
+          changeTo: "blocked",
+          because: regionCells.map(rc => rc.index)
+        }))
+      };
+    }
+    return null;
   }
 }
