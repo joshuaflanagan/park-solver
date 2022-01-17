@@ -24,6 +24,10 @@ const colorsToUse = ["red", "green", "yellow", "blue", "magenta", "cyan",
   "bright_magenta",
 ];
 
+const underline = "\u001b[4m";
+const inverted = "\u001b[7m";
+const bold = "\u001b[1m";
+
 export function render(board: Board, state: State, highlights: number[]){
   const regionColors: {[key: string]: string} = {};
 
@@ -50,7 +54,9 @@ export function render(board: Board, state: State, highlights: number[]){
           rval = "█";
           break;
       }
-      row += `${colors[color]} ${rval} ${colors.reset}`;
+      const decoration = highlights.includes(cell.index) ?
+        underline : ""
+      row += `${colors[color]}${decoration} ${rval} ${colors.reset}`;
     }
     console.log(row);
   }
