@@ -97,7 +97,7 @@ describe("Determine the next move", () => {
       ["b", "a", "a", "a", "e"],
       ["b", "a", "a", "a", "a"],
       ["b", "d", "d", "e", "e"],
-      ["b", "c", "c", "e", "e"],
+      ["b", "b", "c", "e", "e"],
       ["c", "c", "c", "e", "e"],
     ];
 

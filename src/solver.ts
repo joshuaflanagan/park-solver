@@ -17,6 +17,8 @@ import { CellState, State, Change, Move, MoveReason } from "./state";
  * - it blocks all of an unfull Container's options - because: [all container's cells, or just the empty ones]
  */
 
+type SolverStrategy = (state: State) => Move | null;
+
 export class Solver {
   board: Board;
 
@@ -106,12 +108,12 @@ export class Solver {
     //      - try the whole board with 1 move look ahead. if that doesn't lead
     //        to anything fruitful, try with 2 move look ahead.
 
-    const strategies = [
+    const strategies: SolverStrategy[] = [
       this._onlyContainerOption( "only-option-region", b => b.regions ),
       this._onlyContainerOption( "only-option-col", b => b.cols ),
       this._onlyContainerOption( "only-option-row", b => b.rows ),
-      this._singleRowRegion,
-      this._singleColRegion,
+      this._lineInRegion( b => b.cols, c => c.col() ),
+      this._lineInRegion( b => b.rows, c => c.row() ),
     ];
 
     for(const strategy of strategies){
@@ -130,7 +132,7 @@ export class Solver {
   _onlyContainerOption(
     reason: MoveReason,
     containerSource: (b: Board) => Container[]
-  ): (s: State) => Move|null {
+  ): SolverStrategy {
     return (state: State): Move|null => {
       for(const container of containerSource(this.board)){
         const freeCells = container.freeCells(state);
@@ -145,51 +147,32 @@ export class Solver {
     }
   }
 
-  _singleRowRegion(state: State): Move|null {
-    for(const region of this.board.regions){
-      const regionCells = region.freeCells(state);
-      if (!regionCells.length) continue; // resolved region
-      // can assume more than 1, otherwise earlier strategy would have found it
-      const [first, ...rest] = regionCells;
-      const row = first.row().index;
-      if (rest.some( c => c.row().index !== row)) continue;
-      // find other free cells in same row
-      const rowCells = this.board.rows[row].freeCells(state)
-      const otherCells = rowCells.filter(c => c.region() !== region);
-      if (!otherCells.length) continue;
-      return {
-        reason: "blocks-all-region",
-        changes: otherCells.map( c => ({
-          cell: c.index,
-          changeTo: "blocked",
-          because: regionCells.map(rc => rc.index)
-        }))
-      };
+  _lineInRegion(
+    collection: (b: Board) => Container[],
+    container: (c: Cell) => Container
+  ): SolverStrategy {
+    return (state: State): Move|null => {
+      for(const region of this.board.regions){
+        const regionCells = region.freeCells(state);
+        if (!regionCells.length) continue; // resolved region
+        // can assume more than 1, otherwise earlier strategy would have found it
+        const [first, ...rest] = regionCells;
+        const lineIndex = container(first).index;
+        if (rest.some( c => container(c).index !== lineIndex)) continue;
+        // find other free cells in same row/col
+        const lineCells = collection(this.board)[lineIndex].freeCells(state)
+        const otherCells = lineCells.filter(c => c.region() !== region);
+        if (!otherCells.length) continue;
+        return {
+          reason: "blocks-all-region",
+          changes: otherCells.map( c => ({
+            cell: c.index,
+            changeTo: "blocked",
+            because: regionCells.map(rc => rc.index)
+          }))
+        };
+      }
+      return null;
     }
-    return null;
-  }
-
-  _singleColRegion(state: State): Move|null {
-    for(const region of this.board.regions){
-      const regionCells = region.freeCells(state);
-      if (!regionCells.length) continue; // resolved region
-      // can assume more than 1, otherwise earlier strategy would have found it
-      const [first, ...rest] = regionCells;
-      const col = first.col().index;
-      if (rest.some( c => c.col().index !== col)) continue;
-      // find other free cells in same col
-      const colCells = this.board.cols[col].freeCells(state)
-      const otherCells = colCells.filter(c => c.region() !== region);
-      if (!otherCells.length) continue;
-      return {
-        reason: "blocks-all-region",
-        changes: otherCells.map( c => ({
-          cell: c.index,
-          changeTo: "blocked",
-          because: regionCells.map(rc => rc.index)
-        }))
-      };
-    }
-    return null;
   }
 }
