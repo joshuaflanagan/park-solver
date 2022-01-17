@@ -122,7 +122,7 @@ describe("Determine the next move", () => {
     expect(change).toBeDefined();
     expect(change.cell).toBe( board.cellIndex([0,1]));
     expect(change.changeTo).toEqual("blocked");
-    expect(nextMove.reason).toEqual("blocks-all-region");
+    expect(nextMove.reason).toEqual("line-blocks-all-region");
     expect(change.because.length).toEqual(2);
     expect(change.because[0]).toEqual(board.cellIndex([2,1]));
     expect(change.because[1]).toEqual(board.cellIndex([4,1]));
@@ -156,10 +156,44 @@ describe("Determine the next move", () => {
     expect(change).toBeDefined();
     expect(change.cell).toBe( board.cellIndex([0,4]));
     expect(change.changeTo).toEqual("blocked");
-    expect(nextMove.reason).toEqual("blocks-all-region");
+    expect(nextMove.reason).toEqual("line-blocks-all-region");
     expect(change.because.length).toEqual(2);
     expect(change.because[0]).toEqual(board.cellIndex([0,0]));
     expect(change.because[1]).toEqual(board.cellIndex([0,2]));
+  });
+
+  test("If a cell would block all for a region, block the cell", () => {
+    const regionSpec = [
+      ["a", "a", "a", "a", "a"],
+      ["b", "a", "a", "a", "c"],
+      ["b", "d", "a", "a", "a"],
+      ["b", "d", "d", "e", "a"],
+      ["d", "d", "d", "e", "a"],
+    ];
+
+    const board = new Board(regionSpec);
+    let state = board.createState();
+    // the d blocks all the b's
+    state = state.change(movesForState(board,
+      "o--oo",
+      "oooox",
+      "---oo",
+      "----o",
+      "x---o",
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(state);
+
+    const change = nextMove.changes[0];
+    // should block c in first column
+    expect(change).toBeDefined();
+    expect(change.cell).toBe( board.cellIndex([1,2]));
+    expect(change.changeTo).toEqual("blocked");
+    expect(nextMove.reason).toEqual("blocks-all-region");
+    expect(change.because.length).toEqual(2);
+    expect(change.because[0]).toEqual(board.cellIndex([0,2]));
+    expect(change.because[1]).toEqual(board.cellIndex([0,3]));
   });
 
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {
@@ -214,6 +248,26 @@ describe("Determine the next move", () => {
     }
     return change;
   }
+
+  const movesForState = function(board, ...states){
+    const changes = [];
+    for(let row=0; row < states.length; row++){
+      const stateString = states[row];
+      for(let col=0; col < stateString.length; col++){
+        let changeTo = null;
+        if (stateString[col] == "x"){
+          changeTo = "full";
+        } else if (stateString[col] == "o") {
+          changeTo = "blocked";
+        }
+        if (changeTo){
+          changes.push({cell: board.cellIndex([col, row]), changeTo})
+        }
+      }
+    }
+    return {changes};
+  }
+
 });
 
 describe("Potential advanced board", () => {

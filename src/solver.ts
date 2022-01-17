@@ -114,6 +114,7 @@ export class Solver {
       this._onlyContainerOption( "only-option-row", b => b.rows ),
       this._lineInRegion( b => b.cols, c => c.col() ),
       this._lineInRegion( b => b.rows, c => c.row() ),
+      this._blocksRegion,
     ];
 
     for(const strategy of strategies){
@@ -164,7 +165,7 @@ export class Solver {
         const otherCells = lineCells.filter(c => c.region() !== region);
         if (!otherCells.length) continue;
         return {
-          reason: "blocks-all-region",
+          reason: "line-blocks-all-region",
           changes: otherCells.map( c => ({
             cell: c.index,
             changeTo: "blocked",
@@ -174,5 +175,43 @@ export class Solver {
       }
       return null;
     }
+  }
+
+  _blocksRegion(state: State): Move|null {
+    for(const row of this.board.rows){
+      const rowCells = row.freeCells(state);
+      // determine regions of neighbors
+      for(const cell of rowCells){
+        const cellNeighbors = this.board.neighbors(cell);
+        // unique list of neighboring regions
+        const regions = [...new Set(cellNeighbors.map( c => c.region()))]
+        // exclude the cell's region, which might be blocked
+          .filter(r => r.index !== cell.region().index);
+        const freeRegions = regions.filter(r => r.freeCells(state).length);
+        // now make a new state if all neighbors blocked
+        const newState = state.change({
+          changes: [cell, ...cellNeighbors].map( c => ({
+            cell: c.index,
+            changeTo: "blocked"
+          }))
+        })
+        // and see if any freeRegion is no longer free
+        for(const region of freeRegions){
+          if (!region.freeCells(newState).length){
+            return {
+              reason: "blocks-all-region",
+              changes: [
+                {
+                  cell: cell.index,
+                  changeTo: "blocked",
+                  because: region.freeCells(state).map(rc => rc.index)
+                }
+              ]
+            };
+          }
+        }
+      }
+    }
+    return null;
   }
 }
