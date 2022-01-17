@@ -188,13 +188,10 @@ export class Solver {
         // exclude the cell's region, which might be blocked
           .filter(r => r.index !== cell.region().index);
         const freeRegions = regions.filter(r => r.freeCells(state).length);
-        // now make a new state if all neighbors blocked
+        // now make a new state if all neighbors and rays blocked
         const newState = state.change({
-          changes: [cell, ...cellNeighbors].map( c => ({
-            cell: c.index,
-            changeTo: "blocked"
-          }))
-        })
+          changes: this._changesForFull(cell, state)
+        });
         // and see if any freeRegion is no longer free
         for(const region of freeRegions){
           if (!region.freeCells(newState).length){

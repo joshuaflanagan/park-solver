@@ -157,7 +157,7 @@ describe("Determine the next move", () => {
     expect(change.because[1]).toEqual(board.cellIndex([0,2]));
   });
 
-  test("If a cell would block all for a region, block the cell", () => {
+  test("If a cells neighbors would block all for a region, block the cell", () => {
     const regionSpec = [
       ["a", "a", "a", "a", "a"],
       ["b", "a", "a", "a", "c"],
@@ -189,6 +189,42 @@ describe("Determine the next move", () => {
     expect(change.because.length).toEqual(2);
     expect(change.because[0]).toEqual(board.cellIndex([0,2]));
     expect(change.because[1]).toEqual(board.cellIndex([0,3]));
+  });
+
+  test("If a cells neighbors and rays would block all for a region, block the cell", () => {
+    const regionSpec = [
+      ["a", "a", "b", "b", "b"],
+      ["c", "a", "a", "a", "b"],
+      ["c", "c", "d", "d", "b"],
+      ["e", "c", "c", "d", "d"],
+      ["e", "e", "e", "e", "d"],
+    ];
+
+    const board = new Board(regionSpec);
+    let state = board.createState();
+    // the d blocks all the b's
+    state = state.change(movesForState(board,
+      "-----",
+      "---o-",
+      "-----",
+      "-----",
+      "-----",
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(state);
+
+    const change = nextMove.changes[0];
+    // should block c in first column
+    expect(change).toBeDefined();
+    expect(change.cell).toBe( board.cellIndex([4,2]));
+    expect(change.changeTo).toEqual("blocked");
+    expect(nextMove.reason).toEqual("blocks-all-region");
+    expect(change.because.length).toEqual(2);
+    expect(change.because[0]).toEqual(board.cellIndex([2,2]));
+    expect(change.because[0]).toEqual(board.cellIndex([3,2]));
+    expect(change.because[0]).toEqual(board.cellIndex([3,3]));
+    expect(change.because[0]).toEqual(board.cellIndex([3,4]));
   });
 
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {
