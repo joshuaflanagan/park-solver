@@ -48,7 +48,7 @@
 import { State } from "./state";
 const util = require('util');
 
-type RegionSpec = Array<string[]>
+type RegionSpec = Array<string[]> | Array<string>;
 
 interface Identifiable {
   index: number;

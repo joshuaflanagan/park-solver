@@ -119,6 +119,20 @@ describe("Building a Board", () => {
     expect(board.cols.length).toEqual(board.size);
   });
 
+  test("Building a board with an array of strings", () => {
+    const regionSpec = [
+      "aaabb",
+      "acccb",
+      "dcceb",
+      "ddceb",
+      "dccee"
+    ]
+
+    const board = new Board(regionSpec);
+    expect(board.size).toBe(5);
+    expect(board.cells.length).toBe(5 * 5);
+  });
+
   test("Building a board throws if the number of regions does not match 'size'", () => {
     const invalidRegionSpec = [ // a-f, 6 regions
       ["a", "a", "a", "b", "b"],
