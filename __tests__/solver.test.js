@@ -38,14 +38,13 @@ describe("Determine the next move", () => {
     const board = new Board(regionSpec);
     let state = board.createState();
     // block 4th column, except in 3rd row
-    state = state.change({
-      changes: [
-        {cell: 3, changeTo: "blocked"},
-        {cell: 8, changeTo: "blocked"},
-        {cell: 18, changeTo: "blocked"},
-        {cell: 23, changeTo: "blocked"},
-      ]
-    });
+    state = state.change(movesForState(board,
+      "---o-",
+      "---o-",
+      "-----",
+      "---o-",
+      "---o-",
+    ));
 
     const solver = new Solver(board);
     const nextMove = solver.nextMove(state);
@@ -71,14 +70,13 @@ describe("Determine the next move", () => {
     const board = new Board(regionSpec);
     let state = board.createState();
     // block everything in 2nd row, except first a
-    state = state.change({
-      changes: [
-        {cell: 5, changeTo: "blocked"},
-        {cell: 7, changeTo: "blocked"},
-        {cell: 8, changeTo: "blocked"},
-        {cell: 9, changeTo: "blocked"},
-      ]
-    });
+    state = state.change(movesForState(board,
+      "-----",
+      "o-ooo",
+      "-----",
+      "-----",
+      "-----",
+    ));
 
     const solver = new Solver(board);
     const nextMove = solver.nextMove(state);
@@ -104,16 +102,13 @@ describe("Determine the next move", () => {
     const board = new Board(regionSpec);
     let state = board.createState();
     // block all a's, except 2 on second row
-    state = state.change({
-      changes: [
-        {cell: board.cellIndex([1, 0]), changeTo: "blocked"},
-        {cell: board.cellIndex([2, 0]), changeTo: "blocked"},
-        {cell: board.cellIndex([3, 0]), changeTo: "blocked"},
-
-        {cell: board.cellIndex([1, 1]), changeTo: "blocked"},
-        {cell: board.cellIndex([3, 1]), changeTo: "blocked"},
-      ]
-    });
+    state = state.change(movesForState(board,
+      "-ooo-",
+      "-o-o-",
+      "-----",
+      "-----",
+      "-----",
+    ));
 
     const solver = new Solver(board);
     const nextMove = solver.nextMove(state);
@@ -140,13 +135,13 @@ describe("Determine the next move", () => {
     const board = new Board(regionSpec);
     let state = board.createState();
     // block all b's, except 2 in first column
-    state = state.change({
-      changes: [
-        {cell: board.cellIndex([1, 0]), changeTo: "blocked"},
-        {cell: board.cellIndex([0, 1]), changeTo: "blocked"},
-        {cell: board.cellIndex([0, 3]), changeTo: "blocked"},
-      ]
-    });
+    state = state.change(movesForState(board,
+      "-o---",
+      "o----",
+      "-----",
+      "o----",
+      "-----",
+    ));
 
     const solver = new Solver(board);
     const nextMove = solver.nextMove(state);
