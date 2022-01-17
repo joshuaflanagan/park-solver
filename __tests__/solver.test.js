@@ -202,29 +202,22 @@ describe("Determine the next move", () => {
 
     const board = new Board(regionSpec);
     let state = board.createState();
-    // the d blocks all the b's
-    state = state.change(movesForState(board,
-      "-----",
-      "---o-",
-      "-----",
-      "-----",
-      "-----",
-    ));
-
     const solver = new Solver(board);
     const nextMove = solver.nextMove(state);
 
+    // the first b blocks all of the a's
     const change = nextMove.changes[0];
-    // should block c in first column
     expect(change).toBeDefined();
-    expect(change.cell).toBe( board.cellIndex([4,2]));
+    expect(change.cell).toBe( board.cellIndex([2,0]));
     expect(change.changeTo).toEqual("blocked");
     expect(nextMove.reason).toEqual("blocks-all-region");
-    expect(change.because.length).toEqual(2);
-    expect(change.because[0]).toEqual(board.cellIndex([2,2]));
-    expect(change.because[0]).toEqual(board.cellIndex([3,2]));
-    expect(change.because[0]).toEqual(board.cellIndex([3,3]));
-    expect(change.because[0]).toEqual(board.cellIndex([3,4]));
+    expect(change.because.length).toEqual(5);
+    expect(change.because[0]).toEqual(board.cellIndex([0,0]));
+    expect(change.because[1]).toEqual(board.cellIndex([1,0]));
+    expect(change.because[2]).toEqual(board.cellIndex([1,1]));
+    expect(change.because[3]).toEqual(board.cellIndex([2,1]));
+    expect(change.because[4]).toEqual(board.cellIndex([3,1]));
+  });
   });
 
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {
