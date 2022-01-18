@@ -117,7 +117,8 @@ export class Solver {
       this._lineInRegion( b => b.cols, c => c.col() ),
       this._lineInRegion( b => b.rows, c => c.row() ),
       this._blocksRegion,
-      this._confinedRegion,
+      this._confinedRegion("regions-confined-to-rows", c=>c.row(), b=>b.rows),
+      this._confinedRegion("regions-confined-to-cols", c=>c.col(), b=>b.cols),
     ];
 
     for(const strategy of strategies){
@@ -215,81 +216,79 @@ export class Solver {
     return null;
   }
 
-  _confinedRegion(state: State): Move|null {
-    const regionBounds = this.board.regions.
-      map(r => r.freeCells(state)).
-      filter(r => r.length).
-      map(cells => {
-        const rows = cells.map(c=>c.row().index);
-        const cols = cells.map(c=>c.col().index);
-        const minRow = Math.min(...rows);
-        const maxRow = Math.max(...rows);
-        const minCol = Math.min(...cols);
-        const maxCol = Math.max(...cols);
-        return {
-          index: cells[0].region().index,
-          cells,
-          minRow,
-          maxRow,
-          minCol,
-          maxCol,
-          rowSpan: maxRow - minRow + 1,
-          colSpan: maxCol - minCol + 1,
+  _confinedRegion(reason: MoveReason, line: (c:Cell)=>Container,
+    containerSource: (b: Board) => Container[]
+  ): SolverStrategy {
+    return (state: State): Move|null => {
+      const regionBounds = this.board.regions.
+        map(r => r.freeCells(state)).
+        filter(r => r.length).
+        map(cells => {
+          const containers = cells.map(c=>line(c).index);
+          const minVal = Math.min(...containers);
+          const maxVal = Math.max(...containers);
+          return {
+            index: cells[0].region().index,
+            cells,
+            minVal,
+            maxVal,
+            span: maxVal - minVal + 1,
+          }
+        });
+
+      type B = {minVal: number, maxVal: number};
+      const doesIntersect = (a: B, b: B)=> a.minVal <= b.maxVal && a.maxVal >= b.minVal;
+      const doesContaine = (a: B, b: B)=> a.minVal <= b.minVal && a.maxVal >= b.maxVal;
+
+      for(let i=0; i<regionBounds.length; i++){
+        const curRegion = regionBounds[i];
+        // May want to set a hardcoded max, like 4 or 5
+        if (curRegion.span > (this.board.size - 2)) continue;
+        // find other regions in the same containers
+        const intersect = regionBounds.filter(r => {
+          return r.index !== curRegion.index && doesIntersect(curRegion, r);
+        });
+        if (!intersect.length) continue; // no other regions overlap
+        // find other regions confined to same containers
+        const confined = regionBounds.filter(r => {
+          return r.index !== curRegion.index && doesContaine(curRegion, r);
+        });
+        if (!confined.length) continue; // no other regions confined to same containers
+        const intersectNotConfined = intersect.filter(r => !confined.find(o=>o.index===r.index));
+        if (!intersectNotConfined.length) continue; // none to filter out
+        let fullCells = 0;
+        for(let r=curRegion.minVal; r <=curRegion.maxVal; r++){
+          fullCells += containerSource(this.board)[r].fullCells(state)
         }
-      });
+        if ((confined.length + 1 + fullCells) !== curRegion.span) continue;
+        // there are as many confined regions (including current) as containers to fill,
+        // meaning other regions cannot interfere. block them all out.
 
-    type B = {minRow: number, maxRow: number};
-    const rowsIntersect = (a: B, b: B)=> a.minRow <= b.maxRow && a.maxRow >= b.minRow;
-    const rowsContain = (a: B, b: B)=> a.minRow <= b.minRow && a.maxRow >= b.maxRow;
+        let because = curRegion.cells.map(c => c.index);
+        for(const other of confined){
+          because = because.concat(other.cells.map(c => c.index));
+        }
 
-    for(let i=0; i<regionBounds.length; i++){
-      const curRegion = regionBounds[i];
-      // May want to set a hardcoded max, like 4 or 5
-      if (curRegion.rowSpan > (this.board.size - 2)) continue;
-      // find other regions in the same rows
-      const intersect = regionBounds.filter(r => {
-        return r.index !== curRegion.index && rowsIntersect(curRegion, r);
-      });
-      if (!intersect.length) continue; // no other regions overlap
-      // find other regions confined to same rows
-      const confined = regionBounds.filter(r => {
-        return r.index !== curRegion.index && rowsContain(curRegion, r);
-      });
-      if (!confined.length) continue; // no other regions confined to same rows
-      const intersectNotConfined = intersect.filter(r => !confined.find(o=>o.index===r.index));
-      if (!intersectNotConfined.length) continue; // none to filter out
-      let fullCells = 0;
-      for(let r=curRegion.minRow; r <=curRegion.maxRow; r++){
-        fullCells += this.board.rows[r].fullCells(state)
-      }
-      if ((confined.length + 1 + fullCells) !== curRegion.rowSpan) continue;
-      // there are as many confined regions (including current) as rows to fill,
-      // meaning other regions cannot interfere. block them all out.
-
-      let because = curRegion.cells.map(c => c.index);
-      for(const other of confined){
-        because = because.concat(other.cells.map(c => c.index));
-      }
-
-      let changes: Change[] = [];
-      for(const blockedRegion of intersectNotConfined){
-        for(const blockedCell of blockedRegion.cells){
-          const rowIndex = blockedCell.row().index;
-          if (rowIndex >= curRegion.minRow && rowIndex <= curRegion.maxRow){
-            changes.push({
-              cell: blockedCell.index,
-              changeTo: "blocked",
-              because
-            });
+        let changes: Change[] = [];
+        for(const blockedRegion of intersectNotConfined){
+          for(const blockedCell of blockedRegion.cells){
+            const index = line(blockedCell).index;
+            if (index >= curRegion.minVal && index <= curRegion.maxVal){
+              changes.push({
+                cell: blockedCell.index,
+                changeTo: "blocked",
+                because
+              });
+            }
           }
         }
-      }
 
-      return {
-        reason: "regions-confined-to-rows",
-        changes
+        return {
+          reason,
+          changes
+        }
       }
+      return null;
     }
-    return null;
   }
 }

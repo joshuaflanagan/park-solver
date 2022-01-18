@@ -243,7 +243,6 @@ describe("Determine the next move", () => {
 
     const solver = new Solver(board);
     const nextMove = solver.nextMove(state);
-    console.log(nextMove);
 
     // should block all in first 2 rows except b and c
     expect(nextMove.changes.length).toBe(4);
@@ -265,6 +264,55 @@ describe("Determine the next move", () => {
       board.cellIndex([3, 1]),
       board.cellIndex([5, 0]),
       board.cellIndex([5, 1])
+    ]);
+  });
+
+  test("When 2 regions are confined to same two cols, block all others in those cols", () => {
+    const regionSpec = [
+      "lllbbbb",
+      "bbbbbpp",
+      "bbbggpp",
+      "yyyygpp",
+      "yyyygrr",
+      "yyyyurr",
+      "yyyyuuu"
+    ]
+
+    const board = new Board(regionSpec);
+    let state = board.createState();
+    // get to point where we rely on this rule
+    state = state.change(movesForState(board,
+      "---oooo",
+      "-o--o--",
+      "-------",
+      "---o--o",
+      "-------",
+      "-----o-",
+      "---o---",
+    ));
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(state);
+
+    // should block all in last 2 cols except p and r
+    expect(nextMove.reason).toEqual("regions-confined-to-cols");
+    expect(nextMove.changes.length).toBe(2);
+    expect(nextMove.changes.map(c => c.cell)).toEqual([
+      board.cellIndex([5,6]),
+      board.cellIndex([6,6]),
+    ]);
+    expect(nextMove.changes.map(c => c.changeTo)).toEqual([
+      "blocked", "blocked"
+    ]);
+    expect(nextMove.changes[0].because).toEqual(nextMove.changes[1].because);
+    expect(nextMove.changes[0].because).toEqual([
+      board.cellIndex([5, 1]),
+      board.cellIndex([6, 1]),
+      board.cellIndex([5, 2]),
+      board.cellIndex([6, 2]),
+      board.cellIndex([5, 3]),
+      board.cellIndex([5, 4]),
+      board.cellIndex([6, 4]),
+      board.cellIndex([6, 5]),
     ]);
   });
 
