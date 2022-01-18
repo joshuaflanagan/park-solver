@@ -12,6 +12,7 @@ export interface Change {
 // also need - surrounds-full-cell
 export type MoveReason = "input" | "invalid-state" | "container-full" |
   "blocks-all-region"| "line-blocks-all-region" | // "blocks-all-col"| "blocks-all-row"|
+  "regions-confined-to-rows" |
   "only-option-region"| "only-option-col"| "only-option-row";
 export interface Move {
   reason?: MoveReason;

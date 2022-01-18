@@ -70,6 +70,10 @@ export class Container implements Identifiable {
     return this.cells.filter(cell => !cell.state(state));
   }
 
+  fullCells(state: State): number{
+    return this.cells.filter(cell => cell.state(state) === "full").length;
+  }
+
   addCell(cell: Cell){
     this.cells.push(cell);
   }

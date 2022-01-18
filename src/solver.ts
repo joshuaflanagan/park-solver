@@ -33,6 +33,8 @@ export class Solver {
       because: [cell.index]
     },
       // surrounding
+      // TODO: should really filter out cells that are already blocked so
+      // we dont redefine what caused it to be blocked
       ...this.board.neighbors(cell).map(n => {
         return {
           cell: n.index,
@@ -115,6 +117,7 @@ export class Solver {
       this._lineInRegion( b => b.cols, c => c.col() ),
       this._lineInRegion( b => b.rows, c => c.row() ),
       this._blocksRegion,
+      this._confinedRegion,
     ];
 
     for(const strategy of strategies){
@@ -207,6 +210,84 @@ export class Solver {
             };
           }
         }
+      }
+    }
+    return null;
+  }
+
+  _confinedRegion(state: State): Move|null {
+    const regionBounds = this.board.regions.
+      map(r => r.freeCells(state)).
+      filter(r => r.length).
+      map(cells => {
+        const rows = cells.map(c=>c.row().index);
+        const cols = cells.map(c=>c.col().index);
+        const minRow = Math.min(...rows);
+        const maxRow = Math.max(...rows);
+        const minCol = Math.min(...cols);
+        const maxCol = Math.max(...cols);
+        return {
+          index: cells[0].region().index,
+          cells,
+          minRow,
+          maxRow,
+          minCol,
+          maxCol,
+          rowSpan: maxRow - minRow + 1,
+          colSpan: maxCol - minCol + 1,
+        }
+      });
+
+    type B = {minRow: number, maxRow: number};
+    const rowsIntersect = (a: B, b: B)=> a.minRow <= b.maxRow && a.maxRow >= b.minRow;
+    const rowsContain = (a: B, b: B)=> a.minRow <= b.minRow && a.maxRow >= b.maxRow;
+
+    for(let i=0; i<regionBounds.length; i++){
+      const curRegion = regionBounds[i];
+      // May want to set a hardcoded max, like 4 or 5
+      if (curRegion.rowSpan > (this.board.size - 2)) continue;
+      // find other regions in the same rows
+      const intersect = regionBounds.filter(r => {
+        return r.index !== curRegion.index && rowsIntersect(curRegion, r);
+      });
+      if (!intersect.length) continue; // no other regions overlap
+      // find other regions confined to same rows
+      const confined = regionBounds.filter(r => {
+        return r.index !== curRegion.index && rowsContain(curRegion, r);
+      });
+      if (!confined.length) continue; // no other regions confined to same rows
+      const intersectNotConfined = intersect.filter(r => !confined.find(o=>o.index===r.index));
+      if (!intersectNotConfined.length) continue; // none to filter out
+      let fullCells = 0;
+      for(let r=curRegion.minRow; r <=curRegion.maxRow; r++){
+        fullCells += this.board.rows[r].fullCells(state)
+      }
+      if ((confined.length + 1 + fullCells) !== curRegion.rowSpan) continue;
+      // there are as many confined regions (including current) as rows to fill,
+      // meaning other regions cannot interfere. block them all out.
+
+      let because = curRegion.cells.map(c => c.index);
+      for(const other of confined){
+        because = because.concat(other.cells.map(c => c.index));
+      }
+
+      let changes: Change[] = [];
+      for(const blockedRegion of intersectNotConfined){
+        for(const blockedCell of blockedRegion.cells){
+          const rowIndex = blockedCell.row().index;
+          if (rowIndex >= curRegion.minRow && rowIndex <= curRegion.maxRow){
+            changes.push({
+              cell: blockedCell.index,
+              changeTo: "blocked",
+              because
+            });
+          }
+        }
+      }
+
+      return {
+        reason: "regions-confined-to-rows",
+        changes
       }
     }
     return null;

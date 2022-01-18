@@ -229,6 +229,32 @@ describe("Checking for free cells in a region", () => {
   });
 });
 
+describe("Checking for full cells in a row", () => {
+  const regionSpec = [
+    ["a", "a", "a", "a", "a"],
+    ["b", "a", "a", "a", "a"],
+    ["b", "c", "d", "e", "e"],
+    ["c", "c", "c", "e", "e"],
+    ["c", "c", "c", "e", "e"],
+  ];
+  const board = new Board(regionSpec);
+  let state = board.createState();
+  state = state.change({changes: [
+    {cell: 1, changeTo: "blocked"},
+    {cell: 3, changeTo: "blocked"},
+    {cell: 6, changeTo: "blocked"},
+    {cell: 7, changeTo: "full"},
+    {cell: 15, changeTo: "blocked"},
+    {cell: 16, changeTo: "full"},
+    {cell: 17, changeTo: "full"},
+  ]});
+
+  expect(board.rows[0].fullCells(state)).toBe(0);
+  expect(board.rows[1].fullCells(state)).toBe(1);
+  expect(board.rows[2].fullCells(state)).toBe(0);
+  expect(board.rows[3].fullCells(state)).toBe(2);
+})
+
 describe("Identifying neighbors of a cell", () => {
   const regionSpec = [
     ["a", "a", "a", "a", "a"],
