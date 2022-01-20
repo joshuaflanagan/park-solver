@@ -98,10 +98,12 @@ export class Solver {
     //  - test each cell to see if they would block any containers's only options
     //    - the inline checks above are a special case of this, but worth the
     //      optimization
-    //  - incomplete - need to generalize this better. When there are 2 regions
-    //    whose only options are in the same 2 columns, block all other cells
-    //    in those columns if they dont belong to those regions. Works for
-    //    higher counts as well (3 regions whose only options in same 3 cols).
+    //  - When there are 2 regions whose only options are confined to the same
+    //    2 columns, block all other cells in those columns if they dont belong
+    //    to those regions. Works for higher counts as well
+    //  - When there are 3 rows with only 3 different regions, block all cells
+    //    of those regions that are not in the 3 rows, since we know the 3 to
+    //    fulfill the rows will fulfill the 3 regions.
     //  - explore! This should be the last strategy, when all other fail.
     //      Test each possible move to see if it leads to an invalid
     //      state. Need to limit how many moves it looks ahead, otherwise it
@@ -111,6 +113,7 @@ export class Solver {
     //        to anything fruitful, try with 2 move look ahead.
 
     const strategies: SolverStrategy[] = [
+      this._checkTerminalConditions,
       this._onlyContainerOption( "only-option-region", b => b.regions ),
       this._onlyContainerOption( "only-option-col", b => b.cols ),
       this._onlyContainerOption( "only-option-row", b => b.rows ),
@@ -129,7 +132,7 @@ export class Solver {
     // there can be 2 no-op "moves" - board complete, or board invalid
     // can model them as a Move with an empty cells array
     return {
-      reason: "invalid-state",
+      reason: "no-moves",
       changes: []
     };
   }
@@ -258,7 +261,7 @@ export class Solver {
         if (!intersectNotConfined.length) continue; // none to filter out
         let fullCells = 0;
         for(let r=curRegion.minVal; r <=curRegion.maxVal; r++){
-          fullCells += containerSource(this.board)[r].fullCells(state)
+          fullCells += containerSource(this.board)[r].fullCells(state).length
         }
         if ((confined.length + 1 + fullCells) !== curRegion.span) continue;
         // there are as many confined regions (including current) as containers to fill,
@@ -290,5 +293,66 @@ export class Solver {
       }
       return null;
     }
+  }
+
+  _checkTerminalConditions(state: State): Move|null {
+    let solved = true;
+    for(const row of this.board.rows){
+      const full = row.fullCells(state);
+      if (full.length !== this.board.fillCount){ solved = false }
+      if (!full.length) continue;
+      //TODO: check for all blocked cells to determine unwinnable?
+      if (full.length > this.board.fillCount){
+        // should .because be at Move level, so we can call out cause of invalid?
+        // is it always the same for all changes in a move anyway?
+        return {
+          reason: "invalid-row-count",
+          changes: []
+        };
+      }
+      for(const cell of full){
+        for(const neighbor of this.board.neighbors(cell)){
+          if (neighbor.state(state) === "full"){
+            //TODO make test
+            return {
+              reason: "invalid-adjacent",
+              changes: []
+            };
+          }
+        }
+      }
+    }
+    for(const col of this.board.cols){
+      const full = col.fullCells(state);
+      if (full.length !== this.board.fillCount){ solved = false }
+      if (full.length > this.board.fillCount){
+        // should .because be at Move level, so we can call out cause of invalid?
+        // is it always the same for all changes in a move anyway?
+        return {
+          reason: "invalid-col-count",
+          changes: []
+        };
+      }
+    }
+    for(const region of this.board.regions){
+      const full = region.fullCells(state);
+      if (full.length !== this.board.fillCount){ solved = false }
+      if (full.length > this.board.fillCount){
+        // should .because be at Move level, so we can call out cause of invalid?
+        // is it always the same for all changes in a move anyway?
+        return {
+          reason: "invalid-region-count",
+          changes: []
+        };
+      }
+    }
+
+    if (solved) {
+      return {
+        reason: "solved",
+        changes: []
+      }
+    }
+    return null;
   }
 }

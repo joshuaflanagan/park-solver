@@ -179,13 +179,13 @@ describe("Determine the next move", () => {
 
     const solver = new Solver(board);
     const nextMove = solver.nextMove(state);
+    expect(nextMove.reason).toEqual("blocks-all-region");
 
     const change = nextMove.changes[0];
     // should block c in first column
     expect(change).toBeDefined();
     expect(change.cell).toBe( board.cellIndex([1,2]));
     expect(change.changeTo).toEqual("blocked");
-    expect(nextMove.reason).toEqual("blocks-all-region");
     expect(change.because.length).toEqual(2);
     expect(change.because[0]).toEqual(board.cellIndex([0,2]));
     expect(change.because[1]).toEqual(board.cellIndex([0,3]));
@@ -316,6 +316,137 @@ describe("Determine the next move", () => {
     ]);
   });
 
+  test("Can identify a solved board", () => {
+    const regionSpec = [
+      "aaaaa",
+      "baaaa",
+      "bcdee",
+      "cccee",
+      "cccee"
+    ];
+
+    const board = new Board(regionSpec);
+    let state = board.createState();
+    // only the fulls matter - blocked cells just to try and throw it off
+    state = state.change(movesForState(board,
+      "oo x ",
+      "x  oo",
+      "oox  ",
+      "    x",
+      " x   "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(state);
+
+    expect(nextMove.reason).toEqual("solved");
+    expect(nextMove.changes.length).toBe(0);
+  });
+
+  test("Can identify a board with too many full cells in a column", () => {
+    const regionSpec = [
+      "aaaaa",
+      "baaaa",
+      "bcdee",
+      "cccee",
+      "cccee"
+    ];
+
+    const board = new Board(regionSpec);
+
+    let state = board.createState();
+    newState = state.change(movesForState(board,
+      "ooxo ",
+      "x    ",
+      "oo   ",
+      "x    ",
+      "   x "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(newState);
+    expect(nextMove.reason).toEqual("invalid-col-count");
+    expect(nextMove.changes.length).toBe(0);
+  });
+
+  test("Can identify a board with too many full cells in a row", () => {
+    const regionSpec = [
+      "aaaaa",
+      "baaaa",
+      "bcdee",
+      "cccee",
+      "cccee"
+    ];
+
+    const board = new Board(regionSpec);
+
+    let state = board.createState();
+    newState = state.change(movesForState(board,
+      "oo o ",
+      "x   x",
+      "oo   ",
+      "   x ",
+      " x   "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(newState);
+    expect(nextMove.reason).toEqual("invalid-row-count");
+    expect(nextMove.changes.length).toBe(0);
+  });
+
+  test("Can identify a board with too many full cells in a region", () => {
+    const regionSpec = [
+      "aaaaa",
+      "baaaa",
+      "bcdee",
+      "cccee",
+      "cccee"
+    ];
+
+    const board = new Board(regionSpec);
+
+    let state = board.createState();
+    newState = state.change(movesForState(board,
+      "oo o ",
+      "     ",
+      "oo  x",
+      "     ",
+      "   x "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(newState);
+    expect(nextMove.reason).toEqual("invalid-region-count");
+    expect(nextMove.changes.length).toBe(0);
+  });
+
+  test("Can identify a board with adjacent full cells", () => {
+    const regionSpec = [
+      "aaaaa",
+      "baaaa",
+      "bcdee",
+      "cccee",
+      "cccee"
+    ];
+
+    const board = new Board(regionSpec);
+
+    let state = board.createState();
+    newState = state.change(movesForState(board,
+      "oo o ",
+      "   x ",
+      "oox  ",
+      "     ",
+      " x   "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(newState);
+    expect(nextMove.reason).toEqual("invalid-adjacent");
+    expect(nextMove.changes.length).toBe(0);
+  });
+
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {
     const regionSpec = [
       ["a", "a", "a", "a", "a"],
@@ -399,5 +530,21 @@ describe("Potential advanced board", () => {
     ["b", "b", "c", "c", "d"],
     ["e", "b", "c", "c", "d"],
     ["e", "e", "e", "c", "d"],
+  ];
+
+  // requires a guess/lookahead
+  // 0,2 would force c and d to compete for same column (2)
+  // a one move lookahead would lead to placing with "only option region" and
+  // then realizing board is invalid/unwinnable
+  // should 'unwinnable' be distinct from 'invalid'?
+  // invalid could mean 2 fulls in same container, or too close
+  // unwinnable means current fulls are otherwise valid, but leave no options
+  // for a region/col/row
+  const regionSpec2 = [
+    "aaaaa",
+    "bccaa",
+    "bcccd",
+    "bdddd",
+    "bddee"
   ];
 });

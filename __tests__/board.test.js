@@ -249,10 +249,10 @@ describe("Checking for full cells in a row", () => {
     {cell: 17, changeTo: "full"},
   ]});
 
-  expect(board.rows[0].fullCells(state)).toBe(0);
-  expect(board.rows[1].fullCells(state)).toBe(1);
-  expect(board.rows[2].fullCells(state)).toBe(0);
-  expect(board.rows[3].fullCells(state)).toBe(2);
+  expect(board.rows[0].fullCells(state)).toEqual([]);
+  expect(board.rows[1].fullCells(state)).toEqual([board.cells[7]]);
+  expect(board.rows[2].fullCells(state)).toEqual([]);
+  expect(board.rows[3].fullCells(state)).toEqual([board.cells[16],board.cells[17]]);
 })
 
 describe("Identifying neighbors of a cell", () => {

@@ -23,11 +23,11 @@ render(board, state, []);
 
 const solver = new Solver(board);
 let nextMove = solver.nextMove(state);
-while (nextMove.reason != "invalid-state"){
+while (nextMove.changes.length){
   console.log("Applying: ", nextMove);
   state = state.change(nextMove);
   const highlights = nextMove.changes.map(c => c.cell);
   render(board, state, highlights);
   nextMove = solver.nextMove(state);
 }
-console.log("No further moves");
+console.log(nextMove.reason);

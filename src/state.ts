@@ -10,7 +10,9 @@ export interface Change {
 
 // instead of container-full, consider column-full, row-full, region-full - if we have the info
 // also need - surrounds-full-cell
-export type MoveReason = "input" | "invalid-state" | "container-full" |
+export type MoveReason = "input" | "solved" | "no-moves" |
+  "invalid-row-count" | "invalid-region-count" |
+  "invalid-col-count" | "invalid-adjacent" |
   "blocks-all-region"| "line-blocks-all-region" | // "blocks-all-col"| "blocks-all-row"|
   "regions-confined-to-rows" | "regions-confined-to-cols" |
   "only-option-region"| "only-option-col"| "only-option-row";
