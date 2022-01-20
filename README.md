@@ -14,6 +14,13 @@ markers cannot be in adjacent cells - including diagnols.
 Each puzzle can be solved through a logical series of steps - there should
 not be any guessing.
 
+You usually play by filling in cells in the grid with 2 different marks:
+one "blocks" the cell, becaus you determined if it were the marker, it would
+prevent some other part of the win condition. And the other mark is used when
+you are confident that a cell should be filled (the "tree").
+
+See [Example.md](example.md) for a walkthrough.
+
 ## Solver overview
 
 This program attempts to codify the logic needed to solve a puzzle. It is
