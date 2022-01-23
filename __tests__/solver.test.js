@@ -549,6 +549,50 @@ describe("Determine the next move", () => {
     expect(nextMove.because).toEqual([board.cellIndex([3,1]), board.cellIndex([2,2])]);
   });
 
+  test("Can identify a cell that must be blocked to avoid making unwinnable after next move", () => {
+    // requires a guess/lookahead
+    // 0,2 would force c and d to compete for same column (2)
+    // a one move lookahead would lead to placing with "only option region" and
+    // then realizing board is invalid/unwinnable
+    // should 'unwinnable' be distinct from 'invalid'?
+    // invalid could mean 2 fulls in same container, or too close
+    // unwinnable means current fulls are otherwise valid, but leave no options
+    // for a region/col/row
+    const regionSpec = [
+      "aaaaa",
+      "bccaa",
+      "bcccd",
+      "bdddd",
+      "bddee"
+    ];
+
+    const board = new Board(regionSpec);
+
+    let state = board.createState();
+    newState = state.change(movesForState(board,
+      "o    ",
+      "   oo",
+      " oo  ",
+      "   oo",
+      "ooo  "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(newState);
+
+    expect(nextMove.reason).toEqual("leads-to-unwinnable");
+    expect(nextMove.changes.length).toBe(1);
+    const change = nextMove.changes[0];
+    expect(change.cell).toEqual(board.cellIndex([0,2]));
+    expect(change.changeTo).toEqual("blocked");
+    //TODO: how do we explain this via because? try returning the competing,
+    //which means returning the potential next move, and then the unwinnable following?
+    //expect(nextMove.because).toEqual([
+      //board.cellIndex([2,1]),
+      //board.cellIndex([2,3])
+    //]);
+  });
+
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {
     const regionSpec = [
       ["a", "a", "a", "a", "a"],
@@ -621,6 +665,8 @@ describe("Determine the next move", () => {
     return {changes};
   }
 
+
+
 });
 
 describe("Potential advanced board", () => {
@@ -632,21 +678,5 @@ describe("Potential advanced board", () => {
     ["b", "b", "c", "c", "d"],
     ["e", "b", "c", "c", "d"],
     ["e", "e", "e", "c", "d"],
-  ];
-
-  // requires a guess/lookahead
-  // 0,2 would force c and d to compete for same column (2)
-  // a one move lookahead would lead to placing with "only option region" and
-  // then realizing board is invalid/unwinnable
-  // should 'unwinnable' be distinct from 'invalid'?
-  // invalid could mean 2 fulls in same container, or too close
-  // unwinnable means current fulls are otherwise valid, but leave no options
-  // for a region/col/row
-  const regionSpec2 = [
-    "aaaaa",
-    "bccaa",
-    "bcccd",
-    "bdddd",
-    "bddee"
   ];
 });

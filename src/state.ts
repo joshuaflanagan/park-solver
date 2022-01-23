@@ -14,7 +14,8 @@ export type MoveReason = "input" | "solved" | "no-moves" | "unwinnable" |
   "invalid-col-count" | "invalid-adjacent" |
   "blocks-all-region"| "line-blocks-all-region" | // "blocks-all-col"| "blocks-all-row"|
   "regions-confined-to-rows" | "regions-confined-to-cols" |
-  "only-option-region"| "only-option-col"| "only-option-row";
+  "only-option-region"| "only-option-col"| "only-option-row" |
+  "leads-to-unwinnable";
 export interface Move {
   reason?: MoveReason;
   changes: Change[];

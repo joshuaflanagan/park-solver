@@ -77,7 +77,7 @@ export class Solver {
 
 
   //TODO: probably want a Move to have an array of cells, to handle "inline".
-  nextMove(state: State): Move {
+  nextMove(state: State, allowLookAhead: boolean=true): Move {
     // Steps to solve:
     // - check all Containers to see if they only have 1 option
     // - check rows/regions to see if only options are in same row
@@ -118,6 +118,9 @@ export class Solver {
       this._confinedRegion("regions-confined-to-rows", c=>c.row(), b=>b.rows),
       this._confinedRegion("regions-confined-to-cols", c=>c.col(), b=>b.cols),
     ];
+    if (allowLookAhead){
+      strategies.push(this._lookahead);
+    }
 
     for(const strategy of strategies){
       const move = strategy.call(this, state);
@@ -374,6 +377,40 @@ export class Solver {
         reason: "solved",
         changes: [],
         because: solution.map(c => c.index)
+      }
+    }
+    return null;
+  }
+
+  _lookahead(state: State): Move|null {
+    const freeCells = this.board.regions.map(r=>r.freeCells(state));
+    freeCells.sort((x,y)=>x.length-y.length);
+    for(const cellGroup of freeCells){
+      for(const cell of cellGroup){
+        let nextState = state.change({
+          changes: this._changesForFull(cell, state),
+          because: [cell.index]
+        });
+
+        // might need to make a new solver instance to keep track of recursion
+        let lookaheads = 2;
+        while (lookaheads > 0) {
+          const nextMove = this.nextMove(nextState, false);
+          // need to make a series of moves
+          if (nextMove.reason === "unwinnable"){
+            // we know the original candidate is invalid
+            return {
+              reason: "leads-to-unwinnable",
+              changes: [{
+                cell: cell.index,
+                changeTo: "blocked"
+              }]
+            }
+          }
+          // apply the move
+          nextState = nextState.change(nextMove)
+          lookaheads -= 1;
+        }
       }
     }
     return null;
