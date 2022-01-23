@@ -30,7 +30,6 @@ export class Solver {
     const candidates: Change[] = [{
       cell: cell.index,
       changeTo: "full",
-      because: [cell.index]
     },
       // surrounding
       // TODO: should really filter out cells that are already blocked so
@@ -39,7 +38,6 @@ export class Solver {
         return {
           cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell.index]
         }
       }),
       // same row
@@ -47,7 +45,6 @@ export class Solver {
         return {
           cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell.index]
         }
       }),
       // same col
@@ -55,7 +52,6 @@ export class Solver {
         return {
           cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell.index]
         }
       }),
       // same region
@@ -63,7 +59,6 @@ export class Solver {
         return {
           cell: n.index,
           changeTo: "blocked" as CellState,
-          because: [cell.index]
         }
       }),
       // TODO: need to dedup across row,col,region
@@ -147,7 +142,8 @@ export class Solver {
         if (freeCells.length === 1){
           return {
             reason: reason,
-            changes: this._changesForFull(freeCells[0], state)
+            changes: this._changesForFull(freeCells[0], state),
+            because: [freeCells[0].index]
           };
         }
       }
@@ -173,10 +169,10 @@ export class Solver {
         if (!otherCells.length) continue;
         return {
           reason: "line-blocks-all-region",
+          because: regionCells.map(rc => rc.index),
           changes: otherCells.map( c => ({
             cell: c.index,
             changeTo: "blocked",
-            because: regionCells.map(rc => rc.index)
           }))
         };
       }
@@ -197,18 +193,19 @@ export class Solver {
         const freeRegions = regions.filter(r => r.freeCells(state).length);
         // now make a new state if all neighbors and rays blocked
         const newState = state.change({
-          changes: this._changesForFull(cell, state)
+          changes: this._changesForFull(cell, state),
+          because: [cell.index]
         });
         // and see if any freeRegion is no longer free
         for(const region of freeRegions){
           if (!region.freeCells(newState).length){
             return {
               reason: "blocks-all-region",
+              because: region.freeCells(state).map(rc => rc.index),
               changes: [
                 {
                   cell: cell.index,
                   changeTo: "blocked",
-                  because: region.freeCells(state).map(rc => rc.index)
                 }
               ]
             };
@@ -280,7 +277,6 @@ export class Solver {
               changes.push({
                 cell: blockedCell.index,
                 changeTo: "blocked",
-                because
               });
             }
           }
@@ -288,7 +284,8 @@ export class Solver {
 
         return {
           reason,
-          changes
+          changes,
+          because
         }
       }
       return null;
@@ -303,8 +300,6 @@ export class Solver {
       if (!full.length) continue;
       //TODO: check for all blocked cells to determine unwinnable?
       if (full.length > this.board.fillCount){
-        // should .because be at Move level, so we can call out cause of invalid?
-        // is it always the same for all changes in a move anyway?
         return {
           reason: "invalid-row-count",
           changes: []
@@ -313,7 +308,6 @@ export class Solver {
       for(const cell of full){
         for(const neighbor of this.board.neighbors(cell)){
           if (neighbor.state(state) === "full"){
-            //TODO make test
             return {
               reason: "invalid-adjacent",
               changes: []
@@ -326,8 +320,6 @@ export class Solver {
       const full = col.fullCells(state);
       if (full.length !== this.board.fillCount){ solved = false }
       if (full.length > this.board.fillCount){
-        // should .because be at Move level, so we can call out cause of invalid?
-        // is it always the same for all changes in a move anyway?
         return {
           reason: "invalid-col-count",
           changes: []
@@ -338,8 +330,6 @@ export class Solver {
       const full = region.fullCells(state);
       if (full.length !== this.board.fillCount){ solved = false }
       if (full.length > this.board.fillCount){
-        // should .because be at Move level, so we can call out cause of invalid?
-        // is it always the same for all changes in a move anyway?
         return {
           reason: "invalid-region-count",
           changes: []

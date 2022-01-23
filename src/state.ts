@@ -5,7 +5,6 @@ export type CellState = undefined | "blocked" | "full";
 export interface Change {
   cell: number;
   changeTo: CellState;
-  because?: number[];
 }
 
 // instead of container-full, consider column-full, row-full, region-full - if we have the info
@@ -19,6 +18,7 @@ export type MoveReason = "input" | "solved" | "no-moves" |
 export interface Move {
   reason?: MoveReason;
   changes: Change[];
+  because?: number[];
 }
 
 export class State {

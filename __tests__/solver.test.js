@@ -20,10 +20,10 @@ describe("Determine the next move", () => {
     const nextMove = solver.nextMove(state);
 
     expect(nextMove.reason).toEqual("only-option-region");
+    expect(nextMove.because.length).toEqual(1);
+    expect(board.regionForCell(nextMove.because[0]).label).toEqual("d");
     const change = nextMove.changes[0];
     expect(change.changeTo).toEqual("full");
-    expect(change.because.length).toEqual(1);
-    expect(board.regionForCell(change.because[0]).label).toEqual("d");
   });
 
   test("Can recognize a column with only one option", () => {
@@ -54,8 +54,8 @@ describe("Determine the next move", () => {
     expect(change.changeTo).toEqual("full");
     expect(change.cell).toBe(13);
     expect(nextMove.reason).toEqual("only-option-col");
-    expect(change.because.length).toEqual(1);
-    expect(board.colForCell(change.because[0]).label).toEqual("3");
+    expect(nextMove.because.length).toEqual(1);
+    expect(board.colForCell(nextMove.because[0]).label).toEqual("3");
   });
 
   test("Can recognize a row with only one option", () => {
@@ -86,8 +86,8 @@ describe("Determine the next move", () => {
     expect(change.changeTo).toEqual("full");
     expect(change.cell).toBe(6);
     expect(nextMove.reason).toEqual("only-option-row");
-    expect(change.because.length).toEqual(1);
-    expect(board.rowForCell(change.because[0]).label).toEqual("1");
+    expect(nextMove.because.length).toEqual(1);
+    expect(board.rowForCell(nextMove.because[0]).label).toEqual("1");
   });
 
   test("If a region only has options in one row - block others in that row", () => {
@@ -118,9 +118,9 @@ describe("Determine the next move", () => {
     expect(change.cell).toBe( board.cellIndex([0,1]));
     expect(change.changeTo).toEqual("blocked");
     expect(nextMove.reason).toEqual("line-blocks-all-region");
-    expect(change.because.length).toEqual(2);
-    expect(change.because[0]).toEqual(board.cellIndex([2,1]));
-    expect(change.because[1]).toEqual(board.cellIndex([4,1]));
+    expect(nextMove.because.length).toEqual(2);
+    expect(nextMove.because[0]).toEqual(board.cellIndex([2,1]));
+    expect(nextMove.because[1]).toEqual(board.cellIndex([4,1]));
   });
 
   test("If a region only has options in one col - block others in that col", () => {
@@ -152,9 +152,9 @@ describe("Determine the next move", () => {
     expect(change.cell).toBe( board.cellIndex([0,4]));
     expect(change.changeTo).toEqual("blocked");
     expect(nextMove.reason).toEqual("line-blocks-all-region");
-    expect(change.because.length).toEqual(2);
-    expect(change.because[0]).toEqual(board.cellIndex([0,0]));
-    expect(change.because[1]).toEqual(board.cellIndex([0,2]));
+    expect(nextMove.because.length).toEqual(2);
+    expect(nextMove.because[0]).toEqual(board.cellIndex([0,0]));
+    expect(nextMove.because[1]).toEqual(board.cellIndex([0,2]));
   });
 
   test("If a cells neighbors would block all for a region, block the cell", () => {
@@ -186,9 +186,9 @@ describe("Determine the next move", () => {
     expect(change).toBeDefined();
     expect(change.cell).toBe( board.cellIndex([1,2]));
     expect(change.changeTo).toEqual("blocked");
-    expect(change.because.length).toEqual(2);
-    expect(change.because[0]).toEqual(board.cellIndex([0,2]));
-    expect(change.because[1]).toEqual(board.cellIndex([0,3]));
+    expect(nextMove.because.length).toEqual(2);
+    expect(nextMove.because[0]).toEqual(board.cellIndex([0,2]));
+    expect(nextMove.because[1]).toEqual(board.cellIndex([0,3]));
   });
 
   test("If a cells neighbors and rays would block all for a region, block the cell", () => {
@@ -211,12 +211,12 @@ describe("Determine the next move", () => {
     expect(change.cell).toBe( board.cellIndex([2,0]));
     expect(change.changeTo).toEqual("blocked");
     expect(nextMove.reason).toEqual("blocks-all-region");
-    expect(change.because.length).toEqual(5);
-    expect(change.because[0]).toEqual(board.cellIndex([0,0]));
-    expect(change.because[1]).toEqual(board.cellIndex([1,0]));
-    expect(change.because[2]).toEqual(board.cellIndex([1,1]));
-    expect(change.because[3]).toEqual(board.cellIndex([2,1]));
-    expect(change.because[4]).toEqual(board.cellIndex([3,1]));
+    expect(nextMove.because.length).toEqual(5);
+    expect(nextMove.because[0]).toEqual(board.cellIndex([0,0]));
+    expect(nextMove.because[1]).toEqual(board.cellIndex([1,0]));
+    expect(nextMove.because[2]).toEqual(board.cellIndex([1,1]));
+    expect(nextMove.because[3]).toEqual(board.cellIndex([2,1]));
+    expect(nextMove.because[4]).toEqual(board.cellIndex([3,1]));
   });
 
   test("When 2 regions are confined to same two rows, block all others in those rows", () => {
@@ -256,10 +256,7 @@ describe("Determine the next move", () => {
     expect(nextMove.changes.map(c => c.changeTo)).toEqual([
       "blocked", "blocked", "blocked", "blocked"
     ]);
-    expect(nextMove.changes[0].because).toEqual(nextMove.changes[1].because);
-    expect(nextMove.changes[1].because).toEqual(nextMove.changes[2].because);
-    expect(nextMove.changes[2].because).toEqual(nextMove.changes[3].because);
-    expect(nextMove.changes[0].because).toEqual([
+    expect(nextMove.because).toEqual([
       board.cellIndex([3, 0]),
       board.cellIndex([3, 1]),
       board.cellIndex([5, 0]),
@@ -303,8 +300,7 @@ describe("Determine the next move", () => {
     expect(nextMove.changes.map(c => c.changeTo)).toEqual([
       "blocked", "blocked"
     ]);
-    expect(nextMove.changes[0].because).toEqual(nextMove.changes[1].because);
-    expect(nextMove.changes[0].because).toEqual([
+    expect(nextMove.because).toEqual([
       board.cellIndex([5, 1]),
       board.cellIndex([6, 1]),
       board.cellIndex([5, 2]),
@@ -464,6 +460,7 @@ describe("Determine the next move", () => {
     // sets a cell to full
     expect(nextMove.changes[0].changeTo).toEqual("full");
     const fullCell = nextMove.changes[0].cell;
+    expect(nextMove.because).toEqual([fullCell]);
     // blocks all cells in row/col (** IF fillcount is met...)
     [
       "1,1,a",
@@ -480,7 +477,6 @@ describe("Determine the next move", () => {
       "2,4,c",
     ].forEach(label => {
       const change = hasChangeToCell(board, nextMove, label, "blocked");
-      expect(change.because).toEqual([fullCell]);
     });
   });
 
