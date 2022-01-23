@@ -337,6 +337,13 @@ describe("Determine the next move", () => {
 
     expect(nextMove.reason).toEqual("solved");
     expect(nextMove.changes.length).toBe(0);
+    expect(nextMove.because).toEqual([
+      board.cellIndex([3,0]),
+      board.cellIndex([0,1]),
+      board.cellIndex([2,2]),
+      board.cellIndex([4,3]),
+      board.cellIndex([1,4]),
+    ])
   });
 
   test("Can identify a board with too many full cells in a column", () => {
@@ -363,6 +370,7 @@ describe("Determine the next move", () => {
     const nextMove = solver.nextMove(newState);
     expect(nextMove.reason).toEqual("invalid-col-count");
     expect(nextMove.changes.length).toBe(0);
+    expect(nextMove.because).toEqual([board.cellIndex([0,1]), board.cellIndex([0,3])]);
   });
 
   test("Can identify a board with too many full cells in a row", () => {
@@ -389,6 +397,7 @@ describe("Determine the next move", () => {
     const nextMove = solver.nextMove(newState);
     expect(nextMove.reason).toEqual("invalid-row-count");
     expect(nextMove.changes.length).toBe(0);
+    expect(nextMove.because).toEqual([board.cellIndex([0,1]), board.cellIndex([4,1])]);
   });
 
   test("Can identify a board with too many full cells in a region", () => {
@@ -415,6 +424,7 @@ describe("Determine the next move", () => {
     const nextMove = solver.nextMove(newState);
     expect(nextMove.reason).toEqual("invalid-region-count");
     expect(nextMove.changes.length).toBe(0);
+    expect(nextMove.because).toEqual([board.cellIndex([4,2]), board.cellIndex([3,4])]);
   });
 
   test("Can identify a board with adjacent full cells", () => {
@@ -441,6 +451,7 @@ describe("Determine the next move", () => {
     const nextMove = solver.nextMove(newState);
     expect(nextMove.reason).toEqual("invalid-adjacent");
     expect(nextMove.changes.length).toBe(0);
+    expect(nextMove.because).toEqual([board.cellIndex([3,1]), board.cellIndex([2,2])]);
   });
 
   test("A move that marks a cell 'full' will also change surrounding cells to 'blocked'", () => {

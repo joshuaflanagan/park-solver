@@ -294,6 +294,7 @@ export class Solver {
 
   _checkTerminalConditions(state: State): Move|null {
     let solved = true;
+    let solution: Cell[] = [];
     for(const row of this.board.rows){
       const full = row.fullCells(state);
       if (full.length !== this.board.fillCount){ solved = false }
@@ -302,15 +303,18 @@ export class Solver {
       if (full.length > this.board.fillCount){
         return {
           reason: "invalid-row-count",
-          changes: []
+          changes: [],
+          because: full.map(c => c.index)
         };
       }
+      solution = solution.concat(full);
       for(const cell of full){
         for(const neighbor of this.board.neighbors(cell)){
           if (neighbor.state(state) === "full"){
             return {
               reason: "invalid-adjacent",
-              changes: []
+              changes: [],
+              because: [cell.index, neighbor.index]
             };
           }
         }
@@ -322,7 +326,8 @@ export class Solver {
       if (full.length > this.board.fillCount){
         return {
           reason: "invalid-col-count",
-          changes: []
+          changes: [],
+          because: full.map(c => c.index)
         };
       }
     }
@@ -332,7 +337,8 @@ export class Solver {
       if (full.length > this.board.fillCount){
         return {
           reason: "invalid-region-count",
-          changes: []
+          changes: [],
+          because: full.map(c => c.index)
         };
       }
     }
@@ -340,7 +346,8 @@ export class Solver {
     if (solved) {
       return {
         reason: "solved",
-        changes: []
+        changes: [],
+        because: solution.map(c => c.index)
       }
     }
     return null;
