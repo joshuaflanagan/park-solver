@@ -373,6 +373,39 @@ describe("Determine the next move", () => {
     expect(nextMove.because).toEqual([board.cellIndex([0,1]), board.cellIndex([0,3])]);
   });
 
+  test("Can identify a board with an unwinnable column", () => {
+    const regionSpec = [
+      "aaaaa",
+      "baaaa",
+      "bcdee",
+      "cccee",
+      "cccee"
+    ];
+
+    const board = new Board(regionSpec);
+
+    let state = board.createState();
+    newState = state.change(movesForState(board,
+      "ooxo ",
+      "xo   ",
+      "oo   ",
+      " o   ",
+      " o x "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(newState);
+    expect(nextMove.reason).toEqual("unwinnable");
+    expect(nextMove.changes.length).toBe(0);
+    expect(nextMove.because).toEqual([
+      board.cellIndex([1,0]),
+      board.cellIndex([1,1]),
+      board.cellIndex([1,2]),
+      board.cellIndex([1,3]),
+      board.cellIndex([1,4]),
+    ]);
+  });
+
   test("Can identify a board with too many full cells in a row", () => {
     const regionSpec = [
       "aaaaa",
@@ -400,6 +433,38 @@ describe("Determine the next move", () => {
     expect(nextMove.because).toEqual([board.cellIndex([0,1]), board.cellIndex([4,1])]);
   });
 
+  test("Can identify a board with an unwinnable row", () => {
+    const regionSpec = [
+      "aaaaa",
+      "baaaa",
+      "bcdee",
+      "cccee",
+      "cccee"
+    ];
+
+    const board = new Board(regionSpec, 2);
+
+    let state = board.createState();
+    newState = state.change(movesForState(board,
+      "oo o ",
+      "xoooo",
+      "oo   ",
+      "   x ",
+      " x   "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(newState);
+    expect(nextMove.reason).toEqual("unwinnable");
+    expect(nextMove.changes.length).toBe(0);
+    expect(nextMove.because).toEqual([
+      board.cellIndex([1,1]),
+      board.cellIndex([2,1]),
+      board.cellIndex([3,1]),
+      board.cellIndex([4,1])
+    ]);
+  });
+
   test("Can identify a board with too many full cells in a region", () => {
     const regionSpec = [
       "aaaaa",
@@ -425,6 +490,36 @@ describe("Determine the next move", () => {
     expect(nextMove.reason).toEqual("invalid-region-count");
     expect(nextMove.changes.length).toBe(0);
     expect(nextMove.because).toEqual([board.cellIndex([4,2]), board.cellIndex([3,4])]);
+  });
+
+  test("Can identify a board with an unwinnable region", () => {
+    const regionSpec = [
+      "aaaaa",
+      "baaaa",
+      "bcdee",
+      "cccee",
+      "cccee"
+    ];
+
+    const board = new Board(regionSpec);
+
+    let state = board.createState();
+    newState = state.change(movesForState(board,
+      "oo o ",
+      "o    ",
+      "oo  x",
+      "     ",
+      "     "
+    ));
+
+    const solver = new Solver(board);
+    const nextMove = solver.nextMove(newState);
+    expect(nextMove.reason).toEqual("unwinnable");
+    expect(nextMove.changes.length).toBe(0);
+    expect(nextMove.because).toEqual([
+      board.cellIndex([0,1]),
+      board.cellIndex([0,2])
+    ]);
   });
 
   test("Can identify a board with adjacent full cells", () => {

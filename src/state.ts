@@ -9,7 +9,7 @@ export interface Change {
 
 // instead of container-full, consider column-full, row-full, region-full - if we have the info
 // also need - surrounds-full-cell
-export type MoveReason = "input" | "solved" | "no-moves" |
+export type MoveReason = "input" | "solved" | "no-moves" | "unwinnable" |
   "invalid-row-count" | "invalid-region-count" |
   "invalid-col-count" | "invalid-adjacent" |
   "blocks-all-region"| "line-blocks-all-region" | // "blocks-all-col"| "blocks-all-row"|

@@ -295,6 +295,7 @@ export class Solver {
   _checkTerminalConditions(state: State): Move|null {
     let solved = true;
     let solution: Cell[] = [];
+    const maxBlocked = this.board.size - this.board.fillCount;
     for(const row of this.board.rows){
       const full = row.fullCells(state);
       if (full.length !== this.board.fillCount){ solved = false }
@@ -306,6 +307,14 @@ export class Solver {
           changes: [],
           because: full.map(c => c.index)
         };
+      }
+      const blocked = row.cells.filter(c => c.state(state) === "blocked");
+      if (blocked.length > maxBlocked){
+        return {
+          reason: "unwinnable",
+          changes: [],
+          because: blocked.map(c => c.index)
+        }
       }
       solution = solution.concat(full);
       for(const cell of full){
@@ -330,8 +339,17 @@ export class Solver {
           because: full.map(c => c.index)
         };
       }
+      const blocked = col.cells.filter(c => c.state(state) === "blocked");
+      if (blocked.length > maxBlocked){
+        return {
+          reason: "unwinnable",
+          changes: [],
+          because: blocked.map(c => c.index)
+        }
+      }
     }
     for(const region of this.board.regions){
+      const maxBlockedRegion = region.cells.length - this.board.fillCount;
       const full = region.fullCells(state);
       if (full.length !== this.board.fillCount){ solved = false }
       if (full.length > this.board.fillCount){
@@ -340,6 +358,14 @@ export class Solver {
           changes: [],
           because: full.map(c => c.index)
         };
+      }
+      const blocked = region.cells.filter(c => c.state(state) === "blocked");
+      if (blocked.length > maxBlockedRegion){
+        return {
+          reason: "unwinnable",
+          changes: [],
+          because: blocked.map(c => c.index)
+        }
       }
     }
 
