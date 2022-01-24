@@ -23,11 +23,13 @@ render(board, state, []);
 
 const solver = new Solver(board);
 let nextMove = solver.nextMove(state);
+let moveCount = 1;
 while (nextMove.changes.length){
-  console.log("Applying: ", nextMove);
+  console.log(`Applying (${moveCount}): `, nextMove);
   state = state.change(nextMove);
   const highlights = nextMove.changes.map(c => c.cell);
   render(board, state, highlights);
   nextMove = solver.nextMove(state);
+  moveCount++;
 }
 console.log(nextMove.reason);
